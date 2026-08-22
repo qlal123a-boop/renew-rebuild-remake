@@ -286,6 +286,15 @@ export type Database = {
       get_registered_user_count: { Args: never; Returns: number }
       increment_visitor_count: { Args: never; Returns: number }
       is_super_admin: { Args: never; Returns: boolean }
+      list_registered_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          last_sign_in_at: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
