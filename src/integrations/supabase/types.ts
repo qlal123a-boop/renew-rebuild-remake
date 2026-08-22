@@ -14,13 +14,277 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      channels: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          provider: string
+          subject: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          provider?: string
+          subject: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          provider?: string
+          subject?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      courses: {
+        Row: {
+          created_at: string
+          description: string
+          grade_id: number | null
+          id: string
+          subject: string
+          thumbnail_url: string | null
+          title: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          grade_id?: number | null
+          id?: string
+          subject: string
+          thumbnail_url?: string | null
+          title: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          grade_id?: number | null
+          id?: string
+          subject?: string
+          thumbnail_url?: string | null
+          title?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      lessons: {
+        Row: {
+          created_at: string
+          description: string
+          grade_id: number
+          id: string
+          semester: number
+          subject: string
+          title: string
+          video_url: string
+          worksheet_name: string | null
+          worksheet_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          grade_id: number
+          id?: string
+          semester: number
+          subject: string
+          title: string
+          video_url?: string
+          worksheet_name?: string | null
+          worksheet_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          grade_id?: number
+          id?: string
+          semester?: number
+          subject?: string
+          title?: string
+          video_url?: string
+          worksheet_name?: string | null
+          worksheet_url?: string | null
+        }
+        Relationships: []
+      }
+      moderator_requests: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string
+          goal: string | null
+          id: number
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name: string
+          goal?: string | null
+          id?: number
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          goal?: string | null
+          id?: number
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          lesson_topic: string
+          questions: Json
+          score: number
+          total: number
+          user_id: string | null
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          lesson_topic: string
+          questions?: Json
+          score?: number
+          total?: number
+          user_id?: string | null
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          lesson_topic?: string
+          questions?: Json
+          score?: number
+          total?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      site_admins: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: number
+          role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: number
+          role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: number
+          role?: string | null
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      summaries: {
+        Row: {
+          content: string
+          created_at: string
+          file_url: string | null
+          grade_id: number
+          id: string
+          subject: string
+          thumbnail_url: string | null
+          title: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          file_url?: string | null
+          grade_id: number
+          id?: string
+          subject: string
+          thumbnail_url?: string | null
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_url?: string | null
+          grade_id?: number
+          id?: string
+          subject?: string
+          thumbnail_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      worksheets: {
+        Row: {
+          created_at: string
+          grade_id: number
+          id: string
+          source: string | null
+          subject: string
+          title: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          grade_id: number
+          id?: string
+          source?: string | null
+          subject: string
+          title: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          grade_id?: number
+          id?: string
+          source?: string | null
+          subject?: string
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_visitor_count: { Args: never; Returns: number }
+      is_super_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
