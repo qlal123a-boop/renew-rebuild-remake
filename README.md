@@ -1,14 +1,88 @@
-# Welcome to your Lovable project
+# Project Mirror
+
+أريد منك استيراد هذا المشروع بالكامل من الملفات المرفقة، ونقله إلى هذا الحساب كنسخة مطابقة تمامًا للمشروع الأصلي. هذا نقل (Migration)، وليس إعادة بناء أو تصميم جديد.
+
+ممنوع تمامًا:
+
+إنشاء مشروع جديد "مشابه" بدلاً من استيراد الملفات الفعلية.
+
+إعادة التصميم أو تغيير الألوان، الخطوط، الترتيب، أو تجربة المستخدم.
+
+حذف أو اختصار أو استبدال أي كود، حتى لو بدا غير مستخدم أو قديم.
+
+استبدال أي ميزة بميزة أبسط.
+
+البدء من الصفر بدلاً من استخدام الأكواد المرفقة كأساس.
+
+المطلوب تنفيذه بدقة:
+
+اقرأ وافحص جميع الملفات والمجلدات المرفقة بالكامل قبل أي تعديل.
+
+استورد كل ما يلي كما هو دون استثناء:
+
+جميع صفحات الموقع (Routes) والمكونات (Components).
+
+كل ملفات JavaScript / TypeScript / CSS.
+
+الصور، الأيقونات، الخطوط، والملفات الثابتة (Assets).
+
+جميع الوظائف البرمجية والخدمات (Functions/Services).
+
+النماذج (Forms) ولوحات التحكم (Admin Dashboards).
+
+أدوار وصلاحيات المستخدمين بالكامل.
+
+جميع الميزات، الأدوات، والألعاب الموجودة حاليًا في الموقع.
+
+إعدادات المشروع، الـ APIs، وأي تكاملات خارجية (مثل Supabase).
+
+قواعد البيانات، الـ Schemas، والـ Migrations الموجودة ضمن الملفات.
+
+أي بيانات تجريبية (Seed Data) مرفقة.
+
+إعدادات المصادقة (Authentication) وتسجيل الدخول والتسجيل.
+
+إعدادات التخزين (Storage).
+
+حافظ على بنية المشروع الأصلية بالكامل: أسماء الملفات، المكونات، والمسارات — لا تغيّرها إلا إذا كان ذلك ضروريًا تقنيًا لتشغيل المشروع في الحساب الجديد.
+
+إذا وُجدت أخطاء تمنع تشغيل المشروع، أصلح فقط ما هو ضروري للتشغيل، مع الحفاظ الكامل على الوظائف والتصميم الأصليين.
+
+بخصوص Supabase تحديدًا:
+
+افحص جميع الملفات، الـ Migrations، والـ Schema المتعلقة به.
+
+حافظ على كل الجداول، العلاقات، والسياسات (Policies) كما هي دون تبسيط.
+
+إذا كانت بيانات الاتصال غير متوفرة، لا تحذف الأكواد المعتمدة عليها — اجعل المشروع جاهزًا للربط لاحقًا ووضّح لي ما هو مطلوب تحديدًا.
+
+إذا كانت هناك متغيرات بيئية (Environment Variables) أو مفاتيح API غير موجودة في الملفات، لا تستبدلها بقيم وهمية ولا تحذف الأكواد المرتبطة بها — أخبرني بوضوح بما يجب إدخاله يدويًا بعد الانتهاء.
+
+بعد الاستيراد، راجع المشروع بالكامل وتأكد من:
+
+عمل جميع الصفحات والمسارات (Routes) دون استثناء.
+
+عدم وجود Imports مكسورة أو ملفات/مكونات مفقودة.
+
+عدم وجود أخطاء Build أو أخطاء حرجة في TypeScript/JavaScript.
+
+عمل التصميم RTL والدعم العربي تمامًا كالأصل.
+
+عمل لوحة التحكم وكل الميزات كما في المشروع الأصلي.
+
+الهدف النهائي: نسخة مطابقة 100% للمشروع الأصلي داخل هذا الحساب — وليس نسخة "شبيهة". قبل الانتهاء، قارن كل الملفات والميزات المستوردة بالملفات المرفقة للتأكد من عدم فقدان أي جزء. وأي عنصر لا يمكن نقله تلقائيًا (بسبب ارتباطه بحساب/قاعدة بيانات/مفتاح API قديم) لا تحذفه أو تستبدله — أخبرني تحديدًا بما يحتاج إعدادًا يدويًا لاحقًا
 
 This project was built with [Lovable](https://lovable.dev).
 
+**Live app**: https://al-manara-edu.lovable.app
+
 ## Build with Lovable
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/ba29f088-8700-4d8c-a33c-2c5666471b27).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
 ## Development
 
@@ -20,10 +94,3 @@ cd <repository-name>
 npm i
 npm run dev
 ```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS

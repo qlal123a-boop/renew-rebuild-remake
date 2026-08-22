@@ -10,33 +10,345 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdminPanelRouteImport } from './routes/admin-panel'
+import { Route as ChannelsRouteImport } from './routes/channels'
+import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as GamesRouteImport } from './routes/games'
+import { Route as GpaRouteImport } from './routes/gpa'
+import { Route as GradesRouteImport } from './routes/grades'
+import { Route as LibraryRouteImport } from './routes/library'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ModeratorRequestRouteImport } from './routes/moderator-request'
+import { Route as PomodoroRouteImport } from './routes/pomodoro'
+import { Route as QuizGeneratorRouteImport } from './routes/quiz-generator'
+import { Route as ScheduleRouteImport } from './routes/schedule'
+import { Route as SmartBoardRouteImport } from './routes/smart-board'
+import { Route as StoreRouteImport } from './routes/store'
+import { Route as SummariesRouteImport } from './routes/summaries'
+import { Route as TasksRouteImport } from './routes/tasks'
+import { Route as TutorRouteImport } from './routes/tutor'
+import { Route as WorksheetsRouteImport } from './routes/worksheets'
+import { Route as CoursesIndexRouteImport } from './routes/courses.index'
+import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
+import { Route as ApiPublicPdfProxyRouteImport } from './routes/api/public/pdf-proxy'
+import { Route as CoursesCourseIdCertificateRouteImport } from './routes/courses.$courseId_.certificate'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminPanelRoute = AdminPanelRouteImport.update({
+  id: '/admin-panel',
+  path: '/admin-panel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChannelsRoute = ChannelsRouteImport.update({
+  id: '/channels',
+  path: '/channels',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesRoute = CoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesRoute = GamesRouteImport.update({
+  id: '/games',
+  path: '/games',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GpaRoute = GpaRouteImport.update({
+  id: '/gpa',
+  path: '/gpa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GradesRoute = GradesRouteImport.update({
+  id: '/grades',
+  path: '/grades',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ModeratorRequestRoute = ModeratorRequestRouteImport.update({
+  id: '/moderator-request',
+  path: '/moderator-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PomodoroRoute = PomodoroRouteImport.update({
+  id: '/pomodoro',
+  path: '/pomodoro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizGeneratorRoute = QuizGeneratorRouteImport.update({
+  id: '/quiz-generator',
+  path: '/quiz-generator',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SmartBoardRoute = SmartBoardRouteImport.update({
+  id: '/smart-board',
+  path: '/smart-board',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StoreRoute = StoreRouteImport.update({
+  id: '/store',
+  path: '/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SummariesRoute = SummariesRouteImport.update({
+  id: '/summaries',
+  path: '/summaries',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TasksRoute = TasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TutorRoute = TutorRouteImport.update({
+  id: '/tutor',
+  path: '/tutor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WorksheetsRoute = WorksheetsRouteImport.update({
+  id: '/worksheets',
+  path: '/worksheets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesIndexRoute = CoursesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CoursesRoute,
+} as any)
+const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
+  id: '/$courseId',
+  path: '/$courseId',
+  getParentRoute: () => CoursesRoute,
+} as any)
+const ApiPublicPdfProxyRoute = ApiPublicPdfProxyRouteImport.update({
+  id: '/api/public/pdf-proxy',
+  path: '/api/public/pdf-proxy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesCourseIdCertificateRoute =
+  CoursesCourseIdCertificateRouteImport.update({
+    id: '/$courseId_/certificate',
+    path: '/$courseId/certificate',
+    getParentRoute: () => CoursesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
+  '/admin-panel': typeof AdminPanelRoute
+  '/channels': typeof ChannelsRoute
+  '/courses': typeof CoursesRouteWithChildren
+  '/games': typeof GamesRoute
+  '/gpa': typeof GpaRoute
+  '/grades': typeof GradesRoute
+  '/library': typeof LibraryRoute
+  '/login': typeof LoginRoute
+  '/moderator-request': typeof ModeratorRequestRoute
+  '/pomodoro': typeof PomodoroRoute
+  '/quiz-generator': typeof QuizGeneratorRoute
+  '/schedule': typeof ScheduleRoute
+  '/smart-board': typeof SmartBoardRoute
+  '/store': typeof StoreRoute
+  '/summaries': typeof SummariesRoute
+  '/tasks': typeof TasksRoute
+  '/tutor': typeof TutorRoute
+  '/worksheets': typeof WorksheetsRoute
+  '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/courses/': typeof CoursesIndexRoute
+  '/api/public/pdf-proxy': typeof ApiPublicPdfProxyRoute
+  '/courses/$courseId/certificate': typeof CoursesCourseIdCertificateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
+  '/admin-panel': typeof AdminPanelRoute
+  '/channels': typeof ChannelsRoute
+  '/games': typeof GamesRoute
+  '/gpa': typeof GpaRoute
+  '/grades': typeof GradesRoute
+  '/library': typeof LibraryRoute
+  '/login': typeof LoginRoute
+  '/moderator-request': typeof ModeratorRequestRoute
+  '/pomodoro': typeof PomodoroRoute
+  '/quiz-generator': typeof QuizGeneratorRoute
+  '/schedule': typeof ScheduleRoute
+  '/smart-board': typeof SmartBoardRoute
+  '/store': typeof StoreRoute
+  '/summaries': typeof SummariesRoute
+  '/tasks': typeof TasksRoute
+  '/tutor': typeof TutorRoute
+  '/worksheets': typeof WorksheetsRoute
+  '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/courses': typeof CoursesIndexRoute
+  '/api/public/pdf-proxy': typeof ApiPublicPdfProxyRoute
+  '/courses/$courseId/certificate': typeof CoursesCourseIdCertificateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/admin': typeof AdminRoute
+  '/admin-panel': typeof AdminPanelRoute
+  '/channels': typeof ChannelsRoute
+  '/courses': typeof CoursesRouteWithChildren
+  '/games': typeof GamesRoute
+  '/gpa': typeof GpaRoute
+  '/grades': typeof GradesRoute
+  '/library': typeof LibraryRoute
+  '/login': typeof LoginRoute
+  '/moderator-request': typeof ModeratorRequestRoute
+  '/pomodoro': typeof PomodoroRoute
+  '/quiz-generator': typeof QuizGeneratorRoute
+  '/schedule': typeof ScheduleRoute
+  '/smart-board': typeof SmartBoardRoute
+  '/store': typeof StoreRoute
+  '/summaries': typeof SummariesRoute
+  '/tasks': typeof TasksRoute
+  '/tutor': typeof TutorRoute
+  '/worksheets': typeof WorksheetsRoute
+  '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/courses/': typeof CoursesIndexRoute
+  '/api/public/pdf-proxy': typeof ApiPublicPdfProxyRoute
+  '/courses/$courseId_/certificate': typeof CoursesCourseIdCertificateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/admin-panel'
+    | '/channels'
+    | '/courses'
+    | '/games'
+    | '/gpa'
+    | '/grades'
+    | '/library'
+    | '/login'
+    | '/moderator-request'
+    | '/pomodoro'
+    | '/quiz-generator'
+    | '/schedule'
+    | '/smart-board'
+    | '/store'
+    | '/summaries'
+    | '/tasks'
+    | '/tutor'
+    | '/worksheets'
+    | '/courses/$courseId'
+    | '/courses/'
+    | '/api/public/pdf-proxy'
+    | '/courses/$courseId/certificate'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/admin-panel'
+    | '/channels'
+    | '/games'
+    | '/gpa'
+    | '/grades'
+    | '/library'
+    | '/login'
+    | '/moderator-request'
+    | '/pomodoro'
+    | '/quiz-generator'
+    | '/schedule'
+    | '/smart-board'
+    | '/store'
+    | '/summaries'
+    | '/tasks'
+    | '/tutor'
+    | '/worksheets'
+    | '/courses/$courseId'
+    | '/courses'
+    | '/api/public/pdf-proxy'
+    | '/courses/$courseId/certificate'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/admin'
+    | '/admin-panel'
+    | '/channels'
+    | '/courses'
+    | '/games'
+    | '/gpa'
+    | '/grades'
+    | '/library'
+    | '/login'
+    | '/moderator-request'
+    | '/pomodoro'
+    | '/quiz-generator'
+    | '/schedule'
+    | '/smart-board'
+    | '/store'
+    | '/summaries'
+    | '/tasks'
+    | '/tutor'
+    | '/worksheets'
+    | '/courses/$courseId'
+    | '/courses/'
+    | '/api/public/pdf-proxy'
+    | '/courses/$courseId_/certificate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  AdminRoute: typeof AdminRoute
+  AdminPanelRoute: typeof AdminPanelRoute
+  ChannelsRoute: typeof ChannelsRoute
+  CoursesRoute: typeof CoursesRouteWithChildren
+  GamesRoute: typeof GamesRoute
+  GpaRoute: typeof GpaRoute
+  GradesRoute: typeof GradesRoute
+  LibraryRoute: typeof LibraryRoute
+  LoginRoute: typeof LoginRoute
+  ModeratorRequestRoute: typeof ModeratorRequestRoute
+  PomodoroRoute: typeof PomodoroRoute
+  QuizGeneratorRoute: typeof QuizGeneratorRoute
+  ScheduleRoute: typeof ScheduleRoute
+  SmartBoardRoute: typeof SmartBoardRoute
+  StoreRoute: typeof StoreRoute
+  SummariesRoute: typeof SummariesRoute
+  TasksRoute: typeof TasksRoute
+  TutorRoute: typeof TutorRoute
+  WorksheetsRoute: typeof WorksheetsRoute
+  ApiPublicPdfProxyRoute: typeof ApiPublicPdfProxyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +360,215 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-panel': {
+      id: '/admin-panel'
+      path: '/admin-panel'
+      fullPath: '/admin-panel'
+      preLoaderRoute: typeof AdminPanelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/channels': {
+      id: '/channels'
+      path: '/channels'
+      fullPath: '/channels'
+      preLoaderRoute: typeof ChannelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses': {
+      id: '/courses'
+      path: '/courses'
+      fullPath: '/courses'
+      preLoaderRoute: typeof CoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/games': {
+      id: '/games'
+      path: '/games'
+      fullPath: '/games'
+      preLoaderRoute: typeof GamesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gpa': {
+      id: '/gpa'
+      path: '/gpa'
+      fullPath: '/gpa'
+      preLoaderRoute: typeof GpaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/grades': {
+      id: '/grades'
+      path: '/grades'
+      fullPath: '/grades'
+      preLoaderRoute: typeof GradesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moderator-request': {
+      id: '/moderator-request'
+      path: '/moderator-request'
+      fullPath: '/moderator-request'
+      preLoaderRoute: typeof ModeratorRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pomodoro': {
+      id: '/pomodoro'
+      path: '/pomodoro'
+      fullPath: '/pomodoro'
+      preLoaderRoute: typeof PomodoroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quiz-generator': {
+      id: '/quiz-generator'
+      path: '/quiz-generator'
+      fullPath: '/quiz-generator'
+      preLoaderRoute: typeof QuizGeneratorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/smart-board': {
+      id: '/smart-board'
+      path: '/smart-board'
+      fullPath: '/smart-board'
+      preLoaderRoute: typeof SmartBoardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/store': {
+      id: '/store'
+      path: '/store'
+      fullPath: '/store'
+      preLoaderRoute: typeof StoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/summaries': {
+      id: '/summaries'
+      path: '/summaries'
+      fullPath: '/summaries'
+      preLoaderRoute: typeof SummariesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tasks': {
+      id: '/tasks'
+      path: '/tasks'
+      fullPath: '/tasks'
+      preLoaderRoute: typeof TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tutor': {
+      id: '/tutor'
+      path: '/tutor'
+      fullPath: '/tutor'
+      preLoaderRoute: typeof TutorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/worksheets': {
+      id: '/worksheets'
+      path: '/worksheets'
+      fullPath: '/worksheets'
+      preLoaderRoute: typeof WorksheetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses/': {
+      id: '/courses/'
+      path: '/'
+      fullPath: '/courses/'
+      preLoaderRoute: typeof CoursesIndexRouteImport
+      parentRoute: typeof CoursesRoute
+    }
+    '/courses/$courseId': {
+      id: '/courses/$courseId'
+      path: '/$courseId'
+      fullPath: '/courses/$courseId'
+      preLoaderRoute: typeof CoursesCourseIdRouteImport
+      parentRoute: typeof CoursesRoute
+    }
+    '/api/public/pdf-proxy': {
+      id: '/api/public/pdf-proxy'
+      path: '/api/public/pdf-proxy'
+      fullPath: '/api/public/pdf-proxy'
+      preLoaderRoute: typeof ApiPublicPdfProxyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses/$courseId_/certificate': {
+      id: '/courses/$courseId_/certificate'
+      path: '/$courseId/certificate'
+      fullPath: '/courses/$courseId/certificate'
+      preLoaderRoute: typeof CoursesCourseIdCertificateRouteImport
+      parentRoute: typeof CoursesRoute
+    }
   }
 }
 
+interface CoursesRouteChildren {
+  CoursesCourseIdRoute: typeof CoursesCourseIdRoute
+  CoursesIndexRoute: typeof CoursesIndexRoute
+  CoursesCourseIdCertificateRoute: typeof CoursesCourseIdCertificateRoute
+}
+
+const CoursesRouteChildren: CoursesRouteChildren = {
+  CoursesCourseIdRoute: CoursesCourseIdRoute,
+  CoursesIndexRoute: CoursesIndexRoute,
+  CoursesCourseIdCertificateRoute: CoursesCourseIdCertificateRoute,
+}
+
+const CoursesRouteWithChildren =
+  CoursesRoute._addFileChildren(CoursesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  AdminRoute: AdminRoute,
+  AdminPanelRoute: AdminPanelRoute,
+  ChannelsRoute: ChannelsRoute,
+  CoursesRoute: CoursesRouteWithChildren,
+  GamesRoute: GamesRoute,
+  GpaRoute: GpaRoute,
+  GradesRoute: GradesRoute,
+  LibraryRoute: LibraryRoute,
+  LoginRoute: LoginRoute,
+  ModeratorRequestRoute: ModeratorRequestRoute,
+  PomodoroRoute: PomodoroRoute,
+  QuizGeneratorRoute: QuizGeneratorRoute,
+  ScheduleRoute: ScheduleRoute,
+  SmartBoardRoute: SmartBoardRoute,
+  StoreRoute: StoreRoute,
+  SummariesRoute: SummariesRoute,
+  TasksRoute: TasksRoute,
+  TutorRoute: TutorRoute,
+  WorksheetsRoute: WorksheetsRoute,
+  ApiPublicPdfProxyRoute: ApiPublicPdfProxyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
