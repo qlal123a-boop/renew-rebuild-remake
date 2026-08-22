@@ -41,8 +41,111 @@ export type Database = {
         }
         Relationships: []
       }
+      course_completions: {
+        Row: {
+          certificate_theme: string | null
+          completed_at: string
+          course_id: string
+          user_id: string
+        }
+        Insert: {
+          certificate_theme?: string | null
+          completed_at?: string
+          course_id: string
+          user_id: string
+        }
+        Update: {
+          certificate_theme?: string | null
+          completed_at?: string
+          course_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_completions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_lessons: {
+        Row: {
+          course_id: string
+          created_at: string
+          lesson_id: string
+          position: number
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          lesson_id: string
+          position?: number
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          lesson_id?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_lessons_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_lessons_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_progress: {
+        Row: {
+          completed_at: string
+          course_id: string
+          lesson_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          course_id: string
+          lesson_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          course_id?: string
+          lesson_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_progress_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
+          auto_certificate_theme: boolean
+          certificate_theme: string | null
           created_at: string
           description: string
           grade_id: number | null
@@ -53,6 +156,8 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          auto_certificate_theme?: boolean
+          certificate_theme?: string | null
           created_at?: string
           description?: string
           grade_id?: number | null
@@ -63,6 +168,8 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          auto_certificate_theme?: boolean
+          certificate_theme?: string | null
           created_at?: string
           description?: string
           grade_id?: number | null
