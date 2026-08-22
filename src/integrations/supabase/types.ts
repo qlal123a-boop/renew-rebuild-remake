@@ -74,6 +74,33 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_progress: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          lesson_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          lesson_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lessons: {
         Row: {
           created_at: string
