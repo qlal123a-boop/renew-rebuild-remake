@@ -283,6 +283,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_registered_user_count: { Args: never; Returns: number }
       increment_visitor_count: { Args: never; Returns: number }
       is_super_admin: { Args: never; Returns: boolean }
     }
