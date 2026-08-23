@@ -181,6 +181,51 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_subjects: {
+        Row: {
+          created_at: string
+          grade_id: number
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          grade_id: number
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          grade_id?: number
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      game_scores: {
+        Row: {
+          created_at: string
+          game: string
+          id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          game: string
+          id?: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          game?: string
+          id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed: boolean
@@ -247,6 +292,48 @@ export type Database = {
         }
         Relationships: []
       }
+      library_books: {
+        Row: {
+          author: string | null
+          category: string
+          cover_url: string | null
+          created_at: string
+          description: string | null
+          grade_id: number | null
+          id: string
+          pdf_url: string
+          subject: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string | null
+          category: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          grade_id?: number | null
+          id?: string
+          pdf_url: string
+          subject?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string | null
+          category?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string | null
+          grade_id?: number | null
+          id?: string
+          pdf_url?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       moderator_requests: {
         Row: {
           created_at: string | null
@@ -276,6 +363,65 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      points_ledger: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          reason: string
+          ref: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          reason: string
+          ref?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          reason?: string
+          ref?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      purchases: {
+        Row: {
+          created_at: string
+          id: string
+          item_id: string
+          price_paid: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_id: string
+          price_paid: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_id?: string
+          price_paid?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "store_items"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quiz_attempts: {
         Row: {
@@ -346,6 +492,45 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      store_items: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          kind: string
+          payload_url: string | null
+          price: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          kind: string
+          payload_url?: string | null
+          price: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          kind?: string
+          payload_url?: string | null
+          price?: number
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -439,6 +624,7 @@ export type Database = {
     }
     Functions: {
       get_registered_user_count: { Args: never; Returns: number }
+      get_user_points: { Args: { _user_id: string }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -467,6 +653,7 @@ export type Database = {
           roles: Database["public"]["Enums"]["app_role"][]
         }[]
       }
+      redeem_store_item: { Args: { _item_id: string }; Returns: Json }
       remove_user_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
