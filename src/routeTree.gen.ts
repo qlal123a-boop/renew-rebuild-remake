@@ -25,6 +25,7 @@ import { Route as PomodoroRouteImport } from './routes/pomodoro'
 import { Route as QuizGeneratorRouteImport } from './routes/quiz-generator'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as SmartBoardRouteImport } from './routes/smart-board'
+import { Route as SmartCoderRouteImport } from './routes/smart-coder'
 import { Route as StoreRouteImport } from './routes/store'
 import { Route as SummariesRouteImport } from './routes/summaries'
 import { Route as TasksRouteImport } from './routes/tasks'
@@ -115,6 +116,11 @@ const SmartBoardRoute = SmartBoardRouteImport.update({
   path: '/smart-board',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SmartCoderRoute = SmartCoderRouteImport.update({
+  id: '/smart-coder',
+  path: '/smart-coder',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StoreRoute = StoreRouteImport.update({
   id: '/store',
   path: '/store',
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/quiz-generator': typeof QuizGeneratorRoute
   '/schedule': typeof ScheduleRoute
   '/smart-board': typeof SmartBoardRoute
+  '/smart-coder': typeof SmartCoderRoute
   '/store': typeof StoreRoute
   '/summaries': typeof SummariesRoute
   '/tasks': typeof TasksRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/quiz-generator': typeof QuizGeneratorRoute
   '/schedule': typeof ScheduleRoute
   '/smart-board': typeof SmartBoardRoute
+  '/smart-coder': typeof SmartCoderRoute
   '/store': typeof StoreRoute
   '/summaries': typeof SummariesRoute
   '/tasks': typeof TasksRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/quiz-generator': typeof QuizGeneratorRoute
   '/schedule': typeof ScheduleRoute
   '/smart-board': typeof SmartBoardRoute
+  '/smart-coder': typeof SmartCoderRoute
   '/store': typeof StoreRoute
   '/summaries': typeof SummariesRoute
   '/tasks': typeof TasksRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/quiz-generator'
     | '/schedule'
     | '/smart-board'
+    | '/smart-coder'
     | '/store'
     | '/summaries'
     | '/tasks'
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
     | '/quiz-generator'
     | '/schedule'
     | '/smart-board'
+    | '/smart-coder'
     | '/store'
     | '/summaries'
     | '/tasks'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/quiz-generator'
     | '/schedule'
     | '/smart-board'
+    | '/smart-coder'
     | '/store'
     | '/summaries'
     | '/tasks'
@@ -343,6 +355,7 @@ export interface RootRouteChildren {
   QuizGeneratorRoute: typeof QuizGeneratorRoute
   ScheduleRoute: typeof ScheduleRoute
   SmartBoardRoute: typeof SmartBoardRoute
+  SmartCoderRoute: typeof SmartCoderRoute
   StoreRoute: typeof StoreRoute
   SummariesRoute: typeof SummariesRoute
   TasksRoute: typeof TasksRoute
@@ -465,6 +478,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SmartBoardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/smart-coder': {
+      id: '/smart-coder'
+      path: '/smart-coder'
+      fullPath: '/smart-coder'
+      preLoaderRoute: typeof SmartCoderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/store': {
       id: '/store'
       path: '/store'
@@ -563,6 +583,7 @@ const rootRouteChildren: RootRouteChildren = {
   QuizGeneratorRoute: QuizGeneratorRoute,
   ScheduleRoute: ScheduleRoute,
   SmartBoardRoute: SmartBoardRoute,
+  SmartCoderRoute: SmartCoderRoute,
   StoreRoute: StoreRoute,
   SummariesRoute: SummariesRoute,
   TasksRoute: TasksRoute,
