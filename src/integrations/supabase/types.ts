@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_operations: {
+        Row: {
+          branch: string | null
+          changes: Json
+          checks: Json
+          created_at: string
+          dangerous: boolean
+          error: string | null
+          id: string
+          model: string | null
+          plan: Json
+          pr_number: number | null
+          pr_url: string | null
+          prompt: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          branch?: string | null
+          changes?: Json
+          checks?: Json
+          created_at?: string
+          dangerous?: boolean
+          error?: string | null
+          id?: string
+          model?: string | null
+          plan?: Json
+          pr_number?: number | null
+          pr_url?: string | null
+          prompt: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          branch?: string | null
+          changes?: Json
+          checks?: Json
+          created_at?: string
+          dangerous?: boolean
+          error?: string | null
+          id?: string
+          model?: string | null
+          plan?: Json
+          pr_number?: number | null
+          pr_url?: string | null
+          prompt?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       channels: {
         Row: {
           created_at: string
