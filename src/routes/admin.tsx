@@ -49,6 +49,7 @@ function Dashboard() {
           <p className="text-sm text-muted-foreground">الدروس والفيديوهات وأوراق العمل والقنوات</p>
         </div>
         <div className="flex gap-2">
+          <Link to="/smart-coder" className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:border-primary hover:text-primary">المبرمج الذكي</Link>
           <Link to="/admin-panel" className="rounded-xl bg-gradient-royal px-4 py-2 text-sm font-bold text-gold">لوحة الإدارة الرئيسية</Link>
           <button onClick={async () => { await signOut(); toast.success("تم تسجيل الخروج"); navigate({ to: "/" }); }} className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:border-destructive hover:text-destructive">
             تسجيل الخروج
