@@ -100,18 +100,24 @@ export type Database = {
           certificate_theme: string | null
           completed_at: string
           course_id: string
+          final_exam_score: number | null
+          student_name: string | null
           user_id: string
         }
         Insert: {
           certificate_theme?: string | null
           completed_at?: string
           course_id: string
+          final_exam_score?: number | null
+          student_name?: string | null
           user_id: string
         }
         Update: {
           certificate_theme?: string | null
           completed_at?: string
           course_id?: string
+          final_exam_score?: number | null
+          student_name?: string | null
           user_id?: string
         }
         Relationships: [
@@ -199,11 +205,13 @@ export type Database = {
       courses: {
         Row: {
           auto_certificate_theme: boolean
+          category: string | null
           certificate_theme: string | null
           created_at: string
           description: string
           grade_id: number | null
           id: string
+          pass_threshold: number
           subject: string
           thumbnail_url: string | null
           title: string
@@ -211,11 +219,13 @@ export type Database = {
         }
         Insert: {
           auto_certificate_theme?: boolean
+          category?: string | null
           certificate_theme?: string | null
           created_at?: string
           description?: string
           grade_id?: number | null
           id?: string
+          pass_threshold?: number
           subject: string
           thumbnail_url?: string | null
           title: string
@@ -223,11 +233,13 @@ export type Database = {
         }
         Update: {
           auto_certificate_theme?: boolean
+          category?: string | null
           certificate_theme?: string | null
           created_at?: string
           description?: string
           grade_id?: number | null
           id?: string
+          pass_threshold?: number
           subject?: string
           thumbnail_url?: string | null
           title?: string
