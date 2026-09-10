@@ -31,8 +31,9 @@ export type AgentOperation = {
   created_at: string;
 };
 
-const MAX_FILES = 12;
-const DAILY_LIMIT = Number(process.env["AGENT_DAILY_LIMIT"] ?? 25);
+const MAX_FILES = 30;
+/** 0 = بلا حد يومي (الافتراضي). */
+const DAILY_LIMIT = Number(process.env["AGENT_DAILY_LIMIT"] ?? 0);
 
 /** ---------- helpers ---------- */
 
@@ -65,7 +66,8 @@ const CODE_SYSTEM = `أنت "المبرمج الذكي": مبرمج خبير ي�
 - ملفات المسارات تستخدم createFileRoute("/path") مع head() فيه عنوان ووصف فريدين، وتُصدَّر باسم Route.
 - استوردات @tanstack/react-router للتوجيه، و@tanstack/react-start لدوال السيرفر.
 - النصوص الظاهرة للمستخدم بالعربية الفصحى.
-أرجع JSON فقط: {"files":[{"path":"...","action":"create|update|delete","content":"المحتوى الكامل"}],"summary":"ملخص عربي للتغييرات"}`;
+- تعمل على ملف واحد في كل مرة: أرجع محتوى ذلك الملف فقط كاملًا.
+أرجع JSON فقط: {"path":"المسار","content":"المحتوى الكامل للملف","summary":"ملخص عربي مختصر"}`;
 
 /** ---------- 1) plan ---------- */
 
@@ -75,13 +77,15 @@ export const agentPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context as never);
 
-    const since = new Date(Date.now() - 86_400_000).toISOString();
-    const { count } = await context.supabase
-      .from("agent_operations")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", since);
-    if ((count ?? 0) >= DAILY_LIMIT) {
-      throw new Error(`تم بلوغ الحد اليومي للعمليات (${DAILY_LIMIT}). حاول غدًا أو ارفع الحد.`);
+    if (DAILY_LIMIT > 0) {
+      const since = new Date(Date.now() - 86_400_000).toISOString();
+      const { count } = await context.supabase
+        .from("agent_operations")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", since);
+      if ((count ?? 0) >= DAILY_LIMIT) {
+        throw new Error(`تم بلوغ الحد اليومي للعمليات (${DAILY_LIMIT}). حاول غدًا أو ارفع الحد.`);
+      }
     }
 
     const { repoConfig, listFiles } = await import("./github.server");
@@ -152,53 +156,79 @@ export const agentExecute = createServerFn({ method: "POST" })
     await context.supabase.from("agent_operations").update({ status: "running" }).eq("id", op.id);
 
     try {
-      // read current contents of the planned files
+      const planned = plan.files.slice(0, MAX_FILES);
+
+      // read current contents of the planned files (shared context, trimmed)
       const current: Record<string, string> = {};
-      for (const f of plan.files) {
+      for (const f of planned) {
         const file = await gh.readFile(repo, f.path);
         if (file) current[f.path] = file.content;
       }
 
-      const contextBlocks = Object.entries(current)
-        .map(([p, c]) => `--- ملف: ${p} ---\n${c.slice(0, 24_000)}`)
-        .join("\n\n");
-
-      const res = await callAiGateway(process.env["LOVABLE_API_KEY"], {
-        label: "smart-coder-code",
-        json: true,
-        timeoutMs: 180_000,
-        messages: [
-          { role: "system", content: CODE_SYSTEM },
-          {
-            role: "user",
-            content: `طلب المدير:\n${op.prompt}\n\nالخطة:\n${JSON.stringify(plan, null, 2)}\n\nمحتوى الملفات الحالية:\n${contextBlocks || "(لا ملفات قائمة — كلها جديدة)"}`,
-          },
-        ],
-      });
-      if (!res.ok) fail(res.code);
-
-      const out = parseJsonLoose<{ files: Array<{ path: string; action: string; content?: string }>; summary?: string }>(
-        res.content,
-      );
-      if (!out?.files?.length) fail("empty");
-
       const changes: AgentChange[] = [];
+      const skipped: string[] = [];
       const branch = `smart-coder/${new Date().toISOString().slice(0, 10)}-${op.id.slice(0, 8)}`;
       await gh.createBranch(repo, branch);
 
-      for (const f of out.files.slice(0, MAX_FILES)) {
-        if (!f.path || !gh.isAllowedPath(f.path)) continue;
-        const before = current[f.path] ?? (await gh.readFile(repo, f.path))?.content ?? "";
-        if (f.action === "delete") {
-          if (!op.dangerous || !data.confirmDangerous) continue;
-          await gh.deleteFile(repo, branch, f.path, `chore(المبرمج الذكي): حذف ${f.path}`);
-          changes.push({ path: f.path, action: "delete", before, after: "" });
+      // one AI call per file → no truncation, the whole plan always gets executed
+      for (const target of planned) {
+        if (!target.path || !gh.isAllowedPath(target.path)) {
+          skipped.push(`${target.path} (مسار غير مسموح)`);
           continue;
         }
-        const content = f.content ?? "";
-        if (!content.trim() || content === before) continue;
-        await gh.writeFile(repo, branch, f.path, content, `feat(المبرمج الذكي): تحديث ${f.path}`);
-        changes.push({ path: f.path, action: before ? "update" : "create", before, after: content });
+        const before = current[target.path] ?? (await gh.readFile(repo, target.path))?.content ?? "";
+
+        if (target.action === "delete") {
+          if (!op.dangerous || !data.confirmDangerous) {
+            skipped.push(`${target.path} (حذف بحاجة تأكيد)`);
+            continue;
+          }
+          await gh.deleteFile(repo, branch, target.path, `chore(المبرمج الذكي): حذف ${target.path}`);
+          changes.push({ path: target.path, action: "delete", before, after: "" });
+          continue;
+        }
+
+        const related = Object.entries(current)
+          .filter(([p]) => p !== target.path)
+          .map(([p, c]) => `--- ملف مرجعي: ${p} ---\n${c.slice(0, 8_000)}`)
+          .join("\n\n");
+
+        let written = false;
+        for (let attempt = 1; attempt <= 2 && !written; attempt++) {
+          const res = await callAiGateway(process.env["LOVABLE_API_KEY"], {
+            label: `smart-coder-code:${target.path}`,
+            json: true,
+            timeoutMs: 180_000,
+            messages: [
+              { role: "system", content: CODE_SYSTEM },
+              {
+                role: "user",
+                content: [
+                  `طلب المدير:\n${op.prompt}`,
+                  `الخطة الكاملة:\n${JSON.stringify(plan, null, 2)}`,
+                  `الملف المطلوب الآن: ${target.path} (${target.action})\nسبب التعديل: ${target.reason ?? ""}`,
+                  before
+                    ? `المحتوى الحالي لهذا الملف:\n${before.slice(0, 40_000)}`
+                    : "هذا ملف جديد لا يوجد له محتوى حالي.",
+                  related ? `ملفات مرجعية للسياق:\n${related}` : "",
+                  `أرجع JSON لهذا الملف وحده فقط.`,
+                ]
+                  .filter(Boolean)
+                  .join("\n\n"),
+              },
+            ],
+          });
+          if (!res.ok) continue;
+
+          const out = parseJsonLoose<{ path?: string; content?: string; summary?: string }>(res.content);
+          const content = (out?.content ?? "").trim();
+          if (!content || content === before.trim()) continue;
+
+          await gh.writeFile(repo, branch, target.path, content, `feat(المبرمج الذكي): تحديث ${target.path}`);
+          changes.push({ path: target.path, action: before ? "update" : "create", before, after: content });
+          written = true;
+        }
+        if (!written) skipped.push(`${target.path} (تعذّر توليد محتوى صالح)`);
       }
 
       if (changes.length === 0) {
@@ -216,6 +246,7 @@ export const agentExecute = createServerFn({ method: "POST" })
         `### الملفات المعدّلة`,
         ...changes.map((c) => `- \`${c.path}\` (${c.action})`),
         "",
+        ...(skipped.length ? [`### ملفات لم تُعدّل`, ...skipped.map((s) => `- ${s}`), ""] : []),
         `_تم إنشاء هذا الطلب بواسطة المبرمج الذكي — عملية ${op.id}_`,
       ].join("\n");
 
