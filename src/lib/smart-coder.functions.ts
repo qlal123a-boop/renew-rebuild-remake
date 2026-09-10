@@ -245,6 +245,7 @@ export const agentExecute = createServerFn({ method: "POST" })
         `### الملفات المعدّلة`,
         ...changes.map((c) => `- \`${c.path}\` (${c.action})`),
         "",
+        ...(skipped.length ? [`### ملفات لم تُعدّل`, ...skipped.map((s) => `- ${s}`), ""] : []),
         `_تم إنشاء هذا الطلب بواسطة المبرمج الذكي — عملية ${op.id}_`,
       ].join("\n");
 
