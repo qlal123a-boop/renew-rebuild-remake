@@ -31,8 +31,9 @@ export type AgentOperation = {
   created_at: string;
 };
 
-const MAX_FILES = 12;
-const DAILY_LIMIT = Number(process.env["AGENT_DAILY_LIMIT"] ?? 25);
+const MAX_FILES = 30;
+/** 0 = بلا حد يومي (الافتراضي). */
+const DAILY_LIMIT = Number(process.env["AGENT_DAILY_LIMIT"] ?? 0);
 
 /** ---------- helpers ---------- */
 
