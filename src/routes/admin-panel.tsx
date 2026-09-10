@@ -91,6 +91,9 @@ function Dashboard() {
           ))}
         </nav>
         <div className="mt-4 border-t border-border pt-3">
+          <Link to="/smart-coder" className="mb-2 block rounded-lg bg-gradient-royal px-3 py-2 text-center text-xs font-bold text-gold shadow-luxury">
+            المبرمج الذكي
+          </Link>
           <Link to="/admin" className="block rounded-lg bg-gradient-gold px-3 py-2 text-center text-xs font-bold shadow-gold" style={{ color: "var(--royal-deep)" }}>
             إدارة المحتوى
           </Link>
