@@ -76,13 +76,15 @@ export const agentPlan = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertSuperAdmin(context as never);
 
-    const since = new Date(Date.now() - 86_400_000).toISOString();
-    const { count } = await context.supabase
-      .from("agent_operations")
-      .select("id", { count: "exact", head: true })
-      .gte("created_at", since);
-    if ((count ?? 0) >= DAILY_LIMIT) {
-      throw new Error(`تم بلوغ الحد اليومي للعمليات (${DAILY_LIMIT}). حاول غدًا أو ارفع الحد.`);
+    if (DAILY_LIMIT > 0) {
+      const since = new Date(Date.now() - 86_400_000).toISOString();
+      const { count } = await context.supabase
+        .from("agent_operations")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", since);
+      if ((count ?? 0) >= DAILY_LIMIT) {
+        throw new Error(`تم بلوغ الحد اليومي للعمليات (${DAILY_LIMIT}). حاول غدًا أو ارفع الحد.`);
+      }
     }
 
     const { repoConfig, listFiles } = await import("./github.server");
