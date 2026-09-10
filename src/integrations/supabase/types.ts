@@ -101,6 +101,7 @@ export type Database = {
           completed_at: string
           course_id: string
           final_exam_score: number | null
+          final_exam_total: number | null
           student_name: string | null
           user_id: string
         }
@@ -109,6 +110,7 @@ export type Database = {
           completed_at?: string
           course_id: string
           final_exam_score?: number | null
+          final_exam_total?: number | null
           student_name?: string | null
           user_id: string
         }
@@ -117,6 +119,7 @@ export type Database = {
           completed_at?: string
           course_id?: string
           final_exam_score?: number | null
+          final_exam_total?: number | null
           student_name?: string | null
           user_id?: string
         }
