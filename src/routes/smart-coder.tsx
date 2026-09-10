@@ -188,7 +188,7 @@ function SmartCoder() {
           <Stat label="المستودع" value={info.repo} />
           <Stat label="الفرع الأساسي" value={info.base} />
           <Stat label="ملفات المشروع" value={info.fileCount ? String(info.fileCount) : "—"} />
-          <Stat label="الحد اليومي" value={`${info.dailyLimit} عملية`} />
+          <Stat label="الحد اليومي" value={info.dailyLimit > 0 ? `${info.dailyLimit} عملية` : "بلا حد"} />
         </div>
       )}
 
