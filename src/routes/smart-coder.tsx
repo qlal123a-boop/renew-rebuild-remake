@@ -87,6 +87,7 @@ function SmartCoder() {
   const status = useServerFn(agentStatus);
   const refresh = useServerFn(agentRefreshChecks);
   const rollback = useServerFn(agentRollback);
+  const applyFile = useServerFn(agentApplyFile);
 
   const [prompt, setPrompt] = useState("");
   const [current, setCurrent] = useState<AgentOperation | null>(null);
