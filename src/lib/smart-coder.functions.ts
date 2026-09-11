@@ -100,7 +100,7 @@ export const agentPlan = createServerFn({ method: "POST" })
     const repo = repoConfig();
     const files = await listFiles(repo);
 
-    const res = await callAiGateway(process.env["LOVABLE_API_KEY"], {
+    const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
       label: "smart-coder-plan",
       json: true,
       timeoutMs: 90_000,
@@ -203,7 +203,7 @@ export const agentExecute = createServerFn({ method: "POST" })
 
         let written = false;
         for (let attempt = 1; attempt <= 2 && !written; attempt++) {
-          const res = await callAiGateway(process.env["LOVABLE_API_KEY"], {
+          const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
             label: `smart-coder-code:${target.path}`,
             json: true,
             timeoutMs: 180_000,
