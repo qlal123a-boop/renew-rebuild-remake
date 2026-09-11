@@ -221,6 +221,27 @@ function SmartCoder() {
         </div>
       )}
 
+      {info && (
+        <div className="mb-6 rounded-2xl border border-gold/30 bg-card p-4 text-sm shadow-card">
+          <h2 className="flex items-center gap-2 font-extrabold">
+            <KeyRound className="h-4 w-4 text-gold" /> محرّكات الذكاء الاصطناعي
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            يجرّب المبرمج الذكي محرّك Lovable أولًا، ثم مفاتيحك الخاصة تلقائيًا حتى يستمر العمل دون انقطاع.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+            <Badge on={info.aiReady} label="محرّك Lovable" />
+            <Badge on={info.geminiReady} label="مفتاح Gemini الخاص" />
+            <Badge on={info.openaiReady} label="مفتاح OpenAI الخاص" />
+          </div>
+          {!info.geminiReady && !info.openaiReady && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              لإضافة مفتاحك الخاص، اطلب من المساعد في المحادثة: «أضف مفتاح Gemini» وسيُفتح لك حقل إدخال آمن.
+            </p>
+          )}
+        </div>
+      )}
+
       {info && (!info.githubReady || !info.aiReady || info.repoError) && (
         <div className="mb-6 flex items-start gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm">
           <AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" />
