@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { callAiGateway, parseJsonLoose, AI_ERROR_AR } from "./ai-gateway";
+import { callAiWithFallback, parseJsonLoose, AI_ERROR_AR } from "./ai-gateway";
 
 /** ---------- shared types (client-safe) ---------- */
 
