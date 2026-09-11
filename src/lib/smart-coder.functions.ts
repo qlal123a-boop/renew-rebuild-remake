@@ -42,6 +42,14 @@ async function assertSuperAdmin(ctx: { supabase: { rpc: (n: "is_super_admin") =>
   if (error || data !== true) throw new Error("غير مصرّح: هذه الأداة للمسؤول الأعلى فقط.");
 }
 
+/** Own provider keys (اختيارية) — تُستخدم تلقائيًا عند نفاد رصيد Lovable. */
+function customKeys() {
+  return {
+    geminiKey: process.env["GEMINI_API_KEY"],
+    openaiKey: process.env["OPENAI_API_KEY"],
+  };
+}
+
 function fail(code: keyof typeof AI_ERROR_AR): never {
   throw new Error(AI_ERROR_AR[code]);
 }
