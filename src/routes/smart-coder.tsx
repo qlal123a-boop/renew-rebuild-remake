@@ -349,6 +349,29 @@ function SmartCoder() {
                   </button>
                   {openFile === c.path && (
                     <div className="p-3 pt-0">
+                      <div className="mb-2 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => onCopy(c.after)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-bold hover:border-gold"
+                        >
+                          <ClipboardCopy className="h-3 w-3" /> نسخ الكود
+                        </button>
+                        {c.action !== "delete" && (
+                          <button
+                            onClick={() => onApplyFile(c.path, c.after)}
+                            disabled={applying === c.path}
+                            className="inline-flex items-center gap-1 rounded-lg bg-gradient-gold px-3 py-1.5 text-xs font-bold disabled:opacity-60"
+                            style={{ color: "var(--royal-deep)" }}
+                          >
+                            {applying === c.path ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <UploadCloud className="h-3 w-3" />
+                            )}
+                            تطبيق التعديل على الملف
+                          </button>
+                        )}
+                      </div>
                       <DiffView before={c.before} after={c.after} />
                     </div>
                   )}
