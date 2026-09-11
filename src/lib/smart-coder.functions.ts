@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { callAiGateway, parseJsonLoose, AI_ERROR_AR } from "./ai-gateway";
+import { callAiWithFallback, parseJsonLoose, AI_ERROR_AR } from "./ai-gateway";
 
 /** ---------- shared types (client-safe) ---------- */
 
@@ -40,6 +40,14 @@ const DAILY_LIMIT = Number(process.env["AGENT_DAILY_LIMIT"] ?? 0);
 async function assertSuperAdmin(ctx: { supabase: { rpc: (n: "is_super_admin") => Promise<{ data: unknown; error: unknown }> } }) {
   const { data, error } = await ctx.supabase.rpc("is_super_admin");
   if (error || data !== true) throw new Error("غير مصرّح: هذه الأداة للمسؤول الأعلى فقط.");
+}
+
+/** Own provider keys (اختيارية) — تُستخدم تلقائيًا عند نفاد رصيد Lovable. */
+function customKeys() {
+  return {
+    geminiKey: process.env["GEMINI_API_KEY"],
+    openaiKey: process.env["OPENAI_API_KEY"],
+  };
 }
 
 function fail(code: keyof typeof AI_ERROR_AR): never {
@@ -92,7 +100,7 @@ export const agentPlan = createServerFn({ method: "POST" })
     const repo = repoConfig();
     const files = await listFiles(repo);
 
-    const res = await callAiGateway(process.env["LOVABLE_API_KEY"], {
+    const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
       label: "smart-coder-plan",
       json: true,
       timeoutMs: 90_000,
@@ -195,7 +203,7 @@ export const agentExecute = createServerFn({ method: "POST" })
 
         let written = false;
         for (let attempt = 1; attempt <= 2 && !written; attempt++) {
-          const res = await callAiGateway(process.env["LOVABLE_API_KEY"], {
+          const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
             label: `smart-coder-code:${target.path}`,
             json: true,
             timeoutMs: 180_000,
@@ -355,5 +363,60 @@ export const agentStatus = createServerFn({ method: "POST" })
         repoError = (e as Error).message.slice(0, 300);
       }
     }
-    return { repo: `${repo.owner}/${repo.repo}`, base: repo.base, githubReady, aiReady, fileCount, repoError, dailyLimit: DAILY_LIMIT };
+    return {
+      repo: `${repo.owner}/${repo.repo}`,
+      base: repo.base,
+      githubReady,
+      aiReady,
+      geminiReady: Boolean(process.env["GEMINI_API_KEY"]),
+      openaiReady: Boolean(process.env["OPENAI_API_KEY"]),
+      fileCount,
+      repoError,
+      dailyLimit: DAILY_LIMIT,
+    };
+  });
+
+/** ---------- 7) تطبيق تعديل ملف واحد مباشرة ---------- */
+
+export const agentApplyFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        operationId: z.string().uuid(),
+        path: z.string().min(3).max(300),
+        content: z.string().min(1).max(400_000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context as never);
+
+    const { data: op } = await context.supabase
+      .from("agent_operations")
+      .select("id, branch, changes")
+      .eq("id", data.operationId)
+      .single();
+    if (!op) throw new Error("العملية غير موجودة.");
+
+    const gh = await import("./github.server");
+    const repo = gh.repoConfig();
+    if (!gh.isAllowedPath(data.path)) throw new Error(`مسار غير مسموح: ${data.path}`);
+
+    const branch = op.branch ?? `smart-coder/manual-${op.id.slice(0, 8)}`;
+    if (!op.branch) await gh.createBranch(repo, branch);
+
+    const before = (await gh.readFile(repo, data.path, branch))?.content ?? "";
+    if (before.trim() === data.content.trim()) throw new Error("لا يوجد تغيير على هذا الملف.");
+
+    await gh.writeFile(repo, branch, data.path, data.content, `feat(المبرمج الذكي): تطبيق ${data.path}`);
+
+    const changes = ((op.changes as unknown as AgentChange[]) ?? []).filter((c) => c.path !== data.path);
+    changes.push({ path: data.path, action: before ? "update" : "create", before, after: data.content });
+    await context.supabase
+      .from("agent_operations")
+      .update({ branch, changes: changes as never })
+      .eq("id", op.id);
+
+    return { ok: true, path: data.path, branch };
   });

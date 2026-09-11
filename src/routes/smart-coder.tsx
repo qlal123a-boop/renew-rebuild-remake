@@ -6,17 +6,21 @@ import {
   AlertTriangle,
   Bot,
   Check,
+  ClipboardCopy,
   ExternalLink,
   FileCode2,
   GitPullRequest,
+  KeyRound,
   Loader2,
   RefreshCw,
   RotateCcw,
   Sparkles,
+  UploadCloud,
 } from "lucide-react";
 import { useAuthUser } from "@/lib/use-auth";
 import { DiffView } from "@/components/diff-view";
 import {
+  agentApplyFile,
   agentExecute,
   agentHistory,
   agentPlan,
@@ -83,6 +87,7 @@ function SmartCoder() {
   const status = useServerFn(agentStatus);
   const refresh = useServerFn(agentRefreshChecks);
   const rollback = useServerFn(agentRollback);
+  const applyFile = useServerFn(agentApplyFile);
 
   const [prompt, setPrompt] = useState("");
   const [current, setCurrent] = useState<AgentOperation | null>(null);
@@ -91,6 +96,30 @@ function SmartCoder() {
   const [busy, setBusy] = useState<"" | "plan" | "exec" | "checks" | "rollback">("");
   const [confirmDanger, setConfirmDanger] = useState(false);
   const [openFile, setOpenFile] = useState<string | null>(null);
+  const [applying, setApplying] = useState<string | null>(null);
+
+  async function onCopy(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("تم نسخ الكود.");
+    } catch {
+      toast.error("تعذّر النسخ من المتصفح.");
+    }
+  }
+
+  async function onApplyFile(path: string, content: string) {
+    if (!current) return;
+    setApplying(path);
+    try {
+      const r = await applyFile({ data: { operationId: current.id, path, content } });
+      toast.success(`تم تطبيق التعديل على ${r.path}`);
+      void loadHistory();
+    } catch (e) {
+      toast.error((e as Error).message || "فشل تطبيق التعديل على الملف.");
+    } finally {
+      setApplying(null);
+    }
+  }
 
   const loadHistory = useCallback(async () => {
     try {
@@ -189,6 +218,27 @@ function SmartCoder() {
           <Stat label="الفرع الأساسي" value={info.base} />
           <Stat label="ملفات المشروع" value={info.fileCount ? String(info.fileCount) : "—"} />
           <Stat label="الحد اليومي" value={info.dailyLimit > 0 ? `${info.dailyLimit} عملية` : "بلا حد"} />
+        </div>
+      )}
+
+      {info && (
+        <div className="mb-6 rounded-2xl border border-gold/30 bg-card p-4 text-sm shadow-card">
+          <h2 className="flex items-center gap-2 font-extrabold">
+            <KeyRound className="h-4 w-4 text-gold" /> محرّكات الذكاء الاصطناعي
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            يجرّب المبرمج الذكي محرّك Lovable أولًا، ثم مفاتيحك الخاصة تلقائيًا حتى يستمر العمل دون انقطاع.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+            <Badge on={info.aiReady} label="محرّك Lovable" />
+            <Badge on={info.geminiReady} label="مفتاح Gemini الخاص" />
+            <Badge on={info.openaiReady} label="مفتاح OpenAI الخاص" />
+          </div>
+          {!info.geminiReady && !info.openaiReady && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              لإضافة مفتاحك الخاص، اطلب من المساعد في المحادثة: «أضف مفتاح Gemini» وسيُفتح لك حقل إدخال آمن.
+            </p>
+          )}
         </div>
       )}
 
@@ -299,6 +349,29 @@ function SmartCoder() {
                   </button>
                   {openFile === c.path && (
                     <div className="p-3 pt-0">
+                      <div className="mb-2 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => onCopy(c.after)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-1.5 text-xs font-bold hover:border-gold"
+                        >
+                          <ClipboardCopy className="h-3 w-3" /> نسخ الكود
+                        </button>
+                        {c.action !== "delete" && (
+                          <button
+                            onClick={() => onApplyFile(c.path, c.after)}
+                            disabled={applying === c.path}
+                            className="inline-flex items-center gap-1 rounded-lg bg-gradient-gold px-3 py-1.5 text-xs font-bold disabled:opacity-60"
+                            style={{ color: "var(--royal-deep)" }}
+                          >
+                            {applying === c.path ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <UploadCloud className="h-3 w-3" />
+                            )}
+                            تطبيق التعديل على الملف
+                          </button>
+                        )}
+                      </div>
                       <DiffView before={c.before} after={c.after} />
                     </div>
                   )}
@@ -355,5 +428,18 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 truncate text-sm font-extrabold" dir="auto">{value}</p>
     </div>
+  );
+}
+
+function Badge({ on, label }: { on: boolean; label: string }) {
+  return (
+    <span
+      className={`rounded-lg border px-3 py-1 ${
+        on ? "border-gold/50 bg-gold/10 text-gold" : "border-border text-muted-foreground"
+      }`}
+    >
+      {on ? "✓ " : "— "}
+      {label}
+    </span>
   );
 }
