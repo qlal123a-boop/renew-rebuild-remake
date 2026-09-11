@@ -363,5 +363,60 @@ export const agentStatus = createServerFn({ method: "POST" })
         repoError = (e as Error).message.slice(0, 300);
       }
     }
-    return { repo: `${repo.owner}/${repo.repo}`, base: repo.base, githubReady, aiReady, fileCount, repoError, dailyLimit: DAILY_LIMIT };
+    return {
+      repo: `${repo.owner}/${repo.repo}`,
+      base: repo.base,
+      githubReady,
+      aiReady,
+      geminiReady: Boolean(process.env["GEMINI_API_KEY"]),
+      openaiReady: Boolean(process.env["OPENAI_API_KEY"]),
+      fileCount,
+      repoError,
+      dailyLimit: DAILY_LIMIT,
+    };
+  });
+
+/** ---------- 7) تطبيق تعديل ملف واحد مباشرة ---------- */
+
+export const agentApplyFile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) =>
+    z
+      .object({
+        operationId: z.string().uuid(),
+        path: z.string().min(3).max(300),
+        content: z.string().min(1).max(400_000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context as never);
+
+    const { data: op } = await context.supabase
+      .from("agent_operations")
+      .select("id, branch, changes")
+      .eq("id", data.operationId)
+      .single();
+    if (!op) throw new Error("العملية غير موجودة.");
+
+    const gh = await import("./github.server");
+    const repo = gh.repoConfig();
+    if (!gh.isAllowedPath(data.path)) throw new Error(`مسار غير مسموح: ${data.path}`);
+
+    const branch = op.branch ?? `smart-coder/manual-${op.id.slice(0, 8)}`;
+    if (!op.branch) await gh.createBranch(repo, branch);
+
+    const before = (await gh.readFile(repo, data.path, branch))?.content ?? "";
+    if (before.trim() === data.content.trim()) throw new Error("لا يوجد تغيير على هذا الملف.");
+
+    await gh.writeFile(repo, branch, data.path, data.content, `feat(المبرمج الذكي): تطبيق ${data.path}`);
+
+    const changes = ((op.changes as unknown as AgentChange[]) ?? []).filter((c) => c.path !== data.path);
+    changes.push({ path: data.path, action: before ? "update" : "create", before, after: data.content });
+    await context.supabase
+      .from("agent_operations")
+      .update({ branch, changes: changes as never })
+      .eq("id", op.id);
+
+    return { ok: true, path: data.path, branch };
   });
