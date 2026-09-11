@@ -430,3 +430,16 @@ function Stat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+function Badge({ on, label }: { on: boolean; label: string }) {
+  return (
+    <span
+      className={`rounded-lg border px-3 py-1 ${
+        on ? "border-gold/50 bg-gold/10 text-gold" : "border-border text-muted-foreground"
+      }`}
+    >
+      {on ? "✓ " : "— "}
+      {label}
+    </span>
+  );
+}
