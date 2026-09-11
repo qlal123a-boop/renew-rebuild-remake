@@ -142,6 +142,133 @@ export async function callAiGateway(
   return { ok: false, code: lastCode, detail: lastDetail };
 }
 
+/** ---------- independent providers (own API keys) ---------- */
+
+export type CustomKeys = { geminiKey?: string | undefined; openaiKey?: string | undefined };
+
+/** Google AI Studio (Gemini) direct call with the project's own key. */
+async function callGeminiDirect(
+  apiKey: string,
+  opts: { messages: GatewayMessage[]; json?: boolean; timeoutMs?: number; label?: string },
+): Promise<AiResult> {
+  const model = "gemini-2.5-flash";
+  const label = opts.label ?? "gemini-direct";
+  const system = opts.messages
+    .filter((m) => m.role === "system")
+    .map((m) => (typeof m.content === "string" ? m.content : ""))
+    .join("\n\n");
+  const contents = opts.messages
+    .filter((m) => m.role !== "system")
+    .map((m) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: typeof m.content === "string" ? m.content : "" }],
+    }));
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 180_000);
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents,
+          ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
+          generationConfig: opts.json ? { responseMimeType: "application/json" } : {},
+        }),
+      },
+    );
+    if (!res.ok) {
+      const detail = `gemini ${res.status} ${(await res.text().catch(() => "")).slice(0, 300)}`;
+      console.error(`[${label}]`, detail);
+      return { ok: false, code: codeForStatus(res.status), detail };
+    }
+    const json = (await res.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
+    const text = json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("").trim();
+    if (text) return { ok: true, content: text, model: `google/${model}` };
+    return { ok: false, code: "empty", detail: "gemini empty" };
+  } catch (e) {
+    const aborted = (e as Error)?.name === "AbortError";
+    return { ok: false, code: aborted ? "timeout" : "unavailable", detail: (e as Error).message };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** OpenAI direct call with the project's own key. */
+async function callOpenAiDirect(
+  apiKey: string,
+  opts: { messages: GatewayMessage[]; json?: boolean; timeoutMs?: number; label?: string },
+): Promise<AiResult> {
+  const model = "gpt-4o-mini";
+  const label = opts.label ?? "openai-direct";
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), opts.timeoutMs ?? 180_000);
+  try {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model,
+        messages: opts.messages,
+        ...(opts.json ? { response_format: { type: "json_object" } } : {}),
+      }),
+    });
+    if (!res.ok) {
+      const detail = `openai ${res.status} ${(await res.text().catch(() => "")).slice(0, 300)}`;
+      console.error(`[${label}]`, detail);
+      return { ok: false, code: codeForStatus(res.status), detail };
+    }
+    const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const text = json.choices?.[0]?.message?.content?.trim();
+    if (text) return { ok: true, content: text, model: `openai/${model}` };
+    return { ok: false, code: "empty", detail: "openai empty" };
+  } catch (e) {
+    const aborted = (e as Error)?.name === "AbortError";
+    return { ok: false, code: aborted ? "timeout" : "unavailable", detail: (e as Error).message };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Lovable gateway first, then the project's own Gemini/OpenAI keys.
+ * Keeps AI features alive when the workspace allowance is exhausted.
+ */
+export async function callAiWithFallback(
+  lovableKey: string | undefined,
+  keys: CustomKeys,
+  opts: {
+    messages: GatewayMessage[];
+    json?: boolean;
+    timeoutMs?: number;
+    attempts?: number;
+    label?: string;
+  },
+): Promise<AiResult> {
+  let last: AiResult = { ok: false, code: "no_key", detail: "no provider configured" };
+  if (lovableKey) {
+    last = await callAiGateway(lovableKey, opts);
+    if (last.ok) return last;
+  }
+  if (keys.geminiKey) {
+    const r = await callGeminiDirect(keys.geminiKey, opts);
+    if (r.ok) return r;
+    last = r;
+  }
+  if (keys.openaiKey) {
+    const r = await callOpenAiDirect(keys.openaiKey, opts);
+    if (r.ok) return r;
+    last = r;
+  }
+  return last;
+}
+
 /** Tolerant JSON extraction for models that wrap JSON in prose/fences. */
 export function parseJsonLoose<T>(raw: string): T | null {
   try {
