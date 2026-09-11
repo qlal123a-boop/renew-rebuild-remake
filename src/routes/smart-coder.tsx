@@ -6,17 +6,21 @@ import {
   AlertTriangle,
   Bot,
   Check,
+  ClipboardCopy,
   ExternalLink,
   FileCode2,
   GitPullRequest,
+  KeyRound,
   Loader2,
   RefreshCw,
   RotateCcw,
   Sparkles,
+  UploadCloud,
 } from "lucide-react";
 import { useAuthUser } from "@/lib/use-auth";
 import { DiffView } from "@/components/diff-view";
 import {
+  agentApplyFile,
   agentExecute,
   agentHistory,
   agentPlan,
