@@ -96,6 +96,30 @@ function SmartCoder() {
   const [busy, setBusy] = useState<"" | "plan" | "exec" | "checks" | "rollback">("");
   const [confirmDanger, setConfirmDanger] = useState(false);
   const [openFile, setOpenFile] = useState<string | null>(null);
+  const [applying, setApplying] = useState<string | null>(null);
+
+  async function onCopy(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("تم نسخ الكود.");
+    } catch {
+      toast.error("تعذّر النسخ من المتصفح.");
+    }
+  }
+
+  async function onApplyFile(path: string, content: string) {
+    if (!current) return;
+    setApplying(path);
+    try {
+      const r = await applyFile({ data: { operationId: current.id, path, content } });
+      toast.success(`تم تطبيق التعديل على ${r.path}`);
+      void loadHistory();
+    } catch (e) {
+      toast.error((e as Error).message || "فشل تطبيق التعديل على الملف.");
+    } finally {
+      setApplying(null);
+    }
+  }
 
   const loadHistory = useCallback(async () => {
     try {
