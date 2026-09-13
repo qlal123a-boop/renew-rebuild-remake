@@ -66,7 +66,7 @@ export type Repo = { owner: string; repo: string; base: string };
 export function repoConfig(): Repo {
   return {
     owner: process.env["AGENT_GITHUB_OWNER"] || "qlal123a-boop",
-    repo: process.env["AGENT_GITHUB_REPO"] || "al-manara-edu",
+    repo: process.env["AGENT_GITHUB_REPO"] || "renew-rebuild-remake",
     base: process.env["AGENT_GITHUB_BASE"] || "main",
   };
 }
