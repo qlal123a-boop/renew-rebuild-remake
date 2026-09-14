@@ -107,6 +107,7 @@ export const agentPlan = createServerFn({ method: "POST" })
 
     const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
       label: "smart-coder-plan",
+      preferDirect: directMode(),
       json: true,
       timeoutMs: 90_000,
       messages: [
@@ -210,6 +211,7 @@ export const agentExecute = createServerFn({ method: "POST" })
         for (let attempt = 1; attempt <= 2 && !written; attempt++) {
           const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
             label: `smart-coder-code:${target.path}`,
+            preferDirect: directMode(),
             json: true,
             timeoutMs: 180_000,
             messages: [
