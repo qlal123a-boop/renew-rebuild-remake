@@ -45,9 +45,14 @@ async function assertSuperAdmin(ctx: { supabase: { rpc: (n: "is_super_admin") =>
 /** Own provider keys (اختيارية) — تُستخدم تلقائيًا عند نفاد رصيد Lovable. */
 function customKeys() {
   return {
-    geminiKey: process.env["GEMINI_API_KEY"],
+    geminiKey: process.env["GEMINI_API_KEY"] ?? process.env["VITE_GEMINI_API_KEY"],
     openaiKey: process.env["OPENAI_API_KEY"],
   };
+}
+
+/** true when the independent engine (own Gemini key) is available. */
+function directMode() {
+  return Boolean(process.env["GEMINI_API_KEY"] ?? process.env["VITE_GEMINI_API_KEY"]);
 }
 
 function fail(code: keyof typeof AI_ERROR_AR): never {
