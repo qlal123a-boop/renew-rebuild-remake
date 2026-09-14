@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { GraduationCap, LogIn, ShieldCheck, Menu, X, LogOut, Languages, RefreshCw } from "lucide-react";
+import { GraduationCap, LogIn, ShieldCheck, Menu, X, LogOut, Languages, RefreshCw, Crown } from "lucide-react";
 import { useState } from "react";
 import { useAuthUser, signOut } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
@@ -23,6 +23,7 @@ const NAV = [
   { to: "/tasks", key: "nav.tasks" },
   { to: "/schedule", key: "nav.schedule" },
   { to: "/gpa", key: "nav.gpa" },
+  { to: "/plans", key: "nav.plans" },
 ] as const;
 
 /** Clears cached layout state and reloads — helps when a stale cache breaks the UI. */
@@ -37,12 +38,22 @@ async function refreshUi() {
   window.location.reload();
 }
 
-
 export function SiteHeader() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { user, isSuperAdmin } = useAuthUser();
   const { t, toggle } = useI18n();
   const [open, setOpen] = useState(false);
+
+  const getNavLabel = (key: string): string => {
+    try {
+      const label = t(key as Parameters<typeof t>[0]);
+      if (label && label !== key) return label;
+    } catch {
+      // fallback for new keys
+    }
+    if (key === "nav.plans") return "الخطط والأسعار";
+    return key;
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-gold/25 bg-gradient-royal text-primary-foreground shadow-luxury">
@@ -52,8 +63,8 @@ export function SiteHeader() {
             <GraduationCap className="h-5 w-5 md:h-6 md:w-6" style={{ color: "var(--royal-deep)" }} />
           </div>
           <div className="min-w-0 leading-tight">
-            <div className="truncate text-base font-extrabold tracking-tight text-gold md:text-xl">{t("brand.name")}</div>
-            <div className="hidden truncate text-[11px] text-primary-foreground/70 sm:block">{t("brand.tagline")}</div>
+            <div className="truncate text-base font-extrabold tracking-tight text-gold md:text-xl">{getNavLabel("brand.name")}</div>
+            <div className="hidden truncate text-[11px] text-primary-foreground/70 sm:block">{getNavLabel("brand.tagline")}</div>
           </div>
         </Link>
 
@@ -69,20 +80,29 @@ export function SiteHeader() {
                 }`}
                 style={active ? { color: "var(--royal-deep)", backgroundColor: "var(--gold)" } : undefined}
               >
-                {t(n.key)}
+                {getNavLabel(n.key)}
               </Link>
             );
           })}
+          <Link
+            to="/plans"
+            className={`flex items-center gap-1.5 rounded-lg border border-gold/40 px-3 py-1.5 text-sm font-semibold text-gold transition-smooth hover:bg-gold/20 ${
+              path === "/plans" ? "bg-gold text-royal-deep font-bold" : ""
+            }`}
+          >
+            <Crown className="h-4 w-4 text-gold" />
+            <span>{getNavLabel("nav.plans")}</span>
+          </Link>
         </nav>
 
         <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
           <div className="hidden sm:block"><ArabicClock /></div>
           <button
             onClick={toggle}
-            aria-label={t("lang.aria")}
+            aria-label={getNavLabel("lang.aria")}
             className="hidden items-center gap-1.5 rounded-xl border border-gold/40 px-2.5 py-2 text-xs font-bold text-gold transition-smooth hover:bg-white/10 sm:inline-flex md:px-3 md:text-sm"
           >
-            <Languages className="h-4 w-4" /> {t("lang.switch")}
+            <Languages className="h-4 w-4" /> {getNavLabel("lang.switch")}
           </button>
           <button
             onClick={() => { toast.info("جارٍ تحديث واجهة الموقع…"); void refreshUi(); }}
@@ -97,19 +117,19 @@ export function SiteHeader() {
 
           {isSuperAdmin && (
             <Link to="/admin-panel" className="hidden items-center gap-2 rounded-xl border border-gold/40 bg-white/5 px-3 py-2 text-xs font-bold text-gold transition-smooth hover:bg-white/10 sm:inline-flex md:text-sm">
-              <ShieldCheck className="h-4 w-4" /> {t("nav.admin")}
+              <ShieldCheck className="h-4 w-4" /> {getNavLabel("nav.admin")}
             </Link>
           )}
           {user ? (
-            <button onClick={async () => { await signOut(); toast.success(t("auth.loggedOut")); }} className="inline-flex items-center gap-2 rounded-xl border border-gold/40 px-2.5 py-2 text-xs font-bold text-gold transition-smooth hover:bg-white/10 md:px-3 md:text-sm">
-              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">{t("auth.logout")}</span>
+            <button onClick={async () => { await signOut(); toast.success(getNavLabel("auth.loggedOut")); }} className="inline-flex items-center gap-2 rounded-xl border border-gold/40 px-2.5 py-2 text-xs font-bold text-gold transition-smooth hover:bg-white/10 md:px-3 md:text-sm">
+              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">{getNavLabel("auth.logout")}</span>
             </button>
           ) : (
             <Link to="/login" className="inline-flex items-center gap-2 rounded-xl bg-gradient-gold px-2.5 py-2 text-xs font-bold shadow-gold transition-smooth hover:scale-[1.03] md:px-4 md:text-sm" style={{ color: "var(--royal-deep)" }}>
-              <LogIn className="h-4 w-4" /> <span className="hidden sm:inline">{t("auth.login")}</span>
+              <LogIn className="h-4 w-4" /> <span className="hidden sm:inline">{getNavLabel("auth.login")}</span>
             </Link>
           )}
-          <button onClick={() => setOpen((v) => !v)} className="rounded-lg border border-gold/30 p-2 text-gold xl:hidden" aria-label={t("nav.menu")}>
+          <button onClick={() => setOpen((v) => !v)} className="rounded-lg border border-gold/30 p-2 text-gold xl:hidden" aria-label={getNavLabel("nav.menu")}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
@@ -120,8 +140,8 @@ export function SiteHeader() {
           <div className="mb-3 flex items-center justify-between gap-2 sm:hidden">
             <ArabicClock />
             <div className="flex items-center gap-2">
-              <button onClick={toggle} aria-label={t("lang.aria")} className="inline-flex items-center gap-1.5 rounded-xl border border-gold/40 px-2.5 py-2 text-xs font-bold text-gold">
-                <Languages className="h-4 w-4" /> {t("lang.switch")}
+              <button onClick={toggle} aria-label={getNavLabel("lang.aria")} className="inline-flex items-center gap-1.5 rounded-xl border border-gold/40 px-2.5 py-2 text-xs font-bold text-gold">
+                <Languages className="h-4 w-4" /> {getNavLabel("lang.switch")}
               </button>
               <button
                 onClick={() => { toast.info("جارٍ تحديث واجهة الموقع…"); void refreshUi(); }}
@@ -145,16 +165,16 @@ export function SiteHeader() {
                   }`}
                   style={active ? { color: "var(--royal-deep)", backgroundColor: "var(--gold)" } : undefined}
                 >
-                  {t(n.key)}
+                  {getNavLabel(n.key)}
                 </Link>
               );
             })}
             <Link to="/moderator-request" onClick={() => setOpen(false)} className="rounded-lg border border-gold/30 px-3 py-2 text-center text-sm font-semibold text-gold">
-              {t("nav.join")}
+              {getNavLabel("nav.join")}
             </Link>
             {isSuperAdmin && (
               <Link to="/admin-panel" onClick={() => setOpen(false)} className="rounded-lg border border-gold/30 px-3 py-2 text-center text-sm font-semibold text-gold">
-                {t("nav.admin")}
+                {getNavLabel("nav.admin")}
               </Link>
             )}
           </div>
