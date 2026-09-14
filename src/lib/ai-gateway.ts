@@ -146,12 +146,19 @@ export async function callAiGateway(
 
 export type CustomKeys = { geminiKey?: string | undefined; openaiKey?: string | undefined };
 
-/** Google AI Studio (Gemini) direct call with the project's own key. */
-async function callGeminiDirect(
+/** Free-tier Gemini chain used by the independent (direct) engine. */
+export const GEMINI_DIRECT_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash",
+] as const;
+
+/** Google AI Studio (Gemini) direct call with the project's own key, one model. */
+async function callGeminiModel(
   apiKey: string,
+  model: string,
   opts: { messages: GatewayMessage[]; json?: boolean; timeoutMs?: number; label?: string },
 ): Promise<AiResult> {
-  const model = "gemini-2.5-flash";
   const label = opts.label ?? "gemini-direct";
   const system = opts.messages
     .filter((m) => m.role === "system")
