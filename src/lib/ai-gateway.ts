@@ -149,9 +149,9 @@ export type CustomKeys = { geminiKey?: string | undefined; openaiKey?: string | 
 
 /** Free-tier Gemini chain used by the independent (direct) engine. */
 export const GEMINI_DIRECT_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
+  "gemini-3.6-flash",
+  "gemini-flash-latest",
+  "gemini-flash-lite-latest",
 ] as const;
 
 /** Google AI Studio (Gemini) direct call with the project's own key, one model. */
