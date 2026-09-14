@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { GraduationCap, LogIn, ShieldCheck, Menu, X, LogOut, Languages, RefreshCw } from "lucide-react";
+import { GraduationCap, LogIn, ShieldCheck, Menu, X, LogOut, Languages, RefreshCw, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useAuthUser, signOut } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
@@ -8,21 +8,22 @@ import { NotificationBell } from "@/components/notification-bell";
 import { ArabicClock } from "@/components/arabic-clock";
 
 const NAV = [
-  { to: "/", key: "nav.home" },
-  { to: "/grades", key: "nav.grades" },
-  { to: "/courses", key: "nav.courses" },
-  { to: "/summaries", key: "nav.summaries" },
-  { to: "/worksheets", key: "nav.worksheets" },
-  { to: "/library", key: "nav.library" },
-  { to: "/smart-board", key: "nav.smartBoard" },
-  { to: "/tutor", key: "nav.tutor" },
-  { to: "/quiz-generator", key: "nav.quiz" },
-  { to: "/pomodoro", key: "nav.pomodoro" },
-  { to: "/games", key: "nav.games" },
-  { to: "/store", key: "nav.store" },
-  { to: "/tasks", key: "nav.tasks" },
-  { to: "/schedule", key: "nav.schedule" },
-  { to: "/gpa", key: "nav.gpa" },
+  { to: "/", key: "nav.home", label: "الرئيسية" },
+  { to: "/plans", key: "nav.plans", label: "الخطط والاشتراكات" },
+  { to: "/grades", key: "nav.grades", label: "الصفوف" },
+  { to: "/courses", key: "nav.courses", label: "الكورسات" },
+  { to: "/summaries", key: "nav.summaries", label: "الملخصات" },
+  { to: "/worksheets", key: "nav.worksheets", label: "أوراق العمل" },
+  { to: "/library", key: "nav.library", label: "المكتبة" },
+  { to: "/smart-board", key: "nav.smartBoard", label: "اللوح الذكي" },
+  { to: "/tutor", key: "nav.tutor", label: "المعلم الذكي" },
+  { to: "/quiz-generator", key: "nav.quiz", label: "الاختبارات" },
+  { to: "/pomodoro", key: "nav.pomodoro", label: "بومودورو" },
+  { to: "/games", key: "nav.games", label: "الألعاب" },
+  { to: "/store", key: "nav.store", label: "المتجر" },
+  { to: "/tasks", key: "nav.tasks", label: "المهام" },
+  { to: "/schedule", key: "nav.schedule", label: "الجدول" },
+  { to: "/gpa", key: "nav.gpa", label: "حاسبة المعدل" },
 ] as const;
 
 /** Clears cached layout state and reloads — helps when a stale cache breaks the UI. */
@@ -37,12 +38,17 @@ async function refreshUi() {
   window.location.reload();
 }
 
-
 export function SiteHeader() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { user, isSuperAdmin } = useAuthUser();
   const { t, toggle } = useI18n();
   const [open, setOpen] = useState(false);
+
+  const getNavTitle = (n: typeof NAV[number]) => {
+    const val = t(n.key);
+    if (val && val !== n.key) return val;
+    return n.label;
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-gold/25 bg-gradient-royal text-primary-foreground shadow-luxury">
@@ -58,18 +64,18 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden items-center gap-1 xl:flex">
-          {NAV.slice(0, 8).map((n) => {
+          {NAV.slice(0, 9).map((n) => {
             const active = path === n.to;
             return (
               <Link
                 key={n.to}
                 to={n.to}
-                className={`rounded-lg px-3 py-2 text-sm font-semibold transition-smooth ${
+                className={`rounded-lg px-2.5 py-2 text-xs font-semibold transition-smooth xl:text-sm ${
                   active ? "shadow-gold" : "text-primary-foreground/85 hover:bg-white/10 hover:text-gold"
                 }`}
                 style={active ? { color: "var(--royal-deep)", backgroundColor: "var(--gold)" } : undefined}
               >
-                {t(n.key)}
+                {getNavTitle(n)}
               </Link>
             );
           })}
@@ -77,6 +83,15 @@ export function SiteHeader() {
 
         <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
           <div className="hidden sm:block"><ArabicClock /></div>
+
+          <Link
+            to="/plans"
+            className="hidden items-center gap-1.5 rounded-xl border border-amber-400/50 bg-gradient-gold px-2.5 py-2 text-xs font-extrabold shadow-gold transition-smooth hover:scale-[1.03] sm:inline-flex md:px-3 md:text-sm"
+            style={{ color: "var(--royal-deep)" }}
+          >
+            <Sparkles className="h-4 w-4" /> <span>الخطط Pro</span>
+          </Link>
+
           <button
             onClick={toggle}
             aria-label={t("lang.aria")}
@@ -145,10 +160,13 @@ export function SiteHeader() {
                   }`}
                   style={active ? { color: "var(--royal-deep)", backgroundColor: "var(--gold)" } : undefined}
                 >
-                  {t(n.key)}
+                  {getNavTitle(n)}
                 </Link>
               );
             })}
+            <Link to="/plans" onClick={() => setOpen(false)} className="rounded-lg border border-gold/30 bg-gradient-gold px-3 py-2 text-center text-sm font-bold shadow-gold" style={{ color: "var(--royal-deep)" }}>
+              الخطط والاشتراكات Pro
+            </Link>
             <Link to="/moderator-request" onClick={() => setOpen(false)} className="rounded-lg border border-gold/30 px-3 py-2 text-center text-sm font-semibold text-gold">
               {t("nav.join")}
             </Link>
