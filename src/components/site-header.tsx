@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { GraduationCap, LogIn, ShieldCheck, Menu, X, LogOut, Languages, RefreshCw } from "lucide-react";
+import { GraduationCap, LogIn, ShieldCheck, Menu, X, LogOut, Languages, RefreshCw, Crown } from "lucide-react";
 import { useState } from "react";
 import { useAuthUser, signOut } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
@@ -8,21 +8,22 @@ import { NotificationBell } from "@/components/notification-bell";
 import { ArabicClock } from "@/components/arabic-clock";
 
 const NAV = [
-  { to: "/", key: "nav.home" },
-  { to: "/grades", key: "nav.grades" },
-  { to: "/courses", key: "nav.courses" },
-  { to: "/summaries", key: "nav.summaries" },
-  { to: "/worksheets", key: "nav.worksheets" },
-  { to: "/library", key: "nav.library" },
-  { to: "/smart-board", key: "nav.smartBoard" },
-  { to: "/tutor", key: "nav.tutor" },
-  { to: "/quiz-generator", key: "nav.quiz" },
-  { to: "/pomodoro", key: "nav.pomodoro" },
-  { to: "/games", key: "nav.games" },
-  { to: "/store", key: "nav.store" },
-  { to: "/tasks", key: "nav.tasks" },
-  { to: "/schedule", key: "nav.schedule" },
-  { to: "/gpa", key: "nav.gpa" },
+  { to: "/", key: "nav.home", fallback: "الرئيسية" },
+  { to: "/grades", key: "nav.grades", fallback: "الصفوف" },
+  { to: "/courses", key: "nav.courses", fallback: "الدورات" },
+  { to: "/plans", key: "nav.plans", fallback: "الخطط والاشتراكات" },
+  { to: "/summaries", key: "nav.summaries", fallback: "الملخصات" },
+  { to: "/worksheets", key: "nav.worksheets", fallback: "أوراق العمل" },
+  { to: "/library", key: "nav.library", fallback: "المكتبة" },
+  { to: "/smart-board", key: "nav.smartBoard", fallback: "السبورة الذكية" },
+  { to: "/tutor", key: "nav.tutor", fallback: "المعلم الذكي" },
+  { to: "/quiz-generator", key: "nav.quiz", fallback: "مولد الاختبارات" },
+  { to: "/pomodoro", key: "nav.pomodoro", fallback: "مؤقت بومودورو" },
+  { to: "/games", key: "nav.games", fallback: "الألعاب" },
+  { to: "/store", key: "nav.store", fallback: "المتجر" },
+  { to: "/tasks", key: "nav.tasks", fallback: "المهام" },
+  { to: "/schedule", key: "nav.schedule", fallback: "الجدول" },
+  { to: "/gpa", key: "nav.gpa", fallback: "حاسبة المعدل" },
 ] as const;
 
 /** Clears cached layout state and reloads — helps when a stale cache breaks the UI. */
@@ -37,12 +38,16 @@ async function refreshUi() {
   window.location.reload();
 }
 
-
 export function SiteHeader() {
   const path = useRouterState({ select: (s) => s.location.pathname });
   const { user, isSuperAdmin } = useAuthUser();
   const { t, toggle } = useI18n();
   const [open, setOpen] = useState(false);
+
+  const getNavLabel = (item: (typeof NAV)[number]) => {
+    const val = t(item.key);
+    return val && !val.startsWith("nav.") ? val : item.fallback;
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-gold/25 bg-gradient-royal text-primary-foreground shadow-luxury">
@@ -69,7 +74,7 @@ export function SiteHeader() {
                 }`}
                 style={active ? { color: "var(--royal-deep)", backgroundColor: "var(--gold)" } : undefined}
               >
-                {t(n.key)}
+                {getNavLabel(n)}
               </Link>
             );
           })}
@@ -77,6 +82,15 @@ export function SiteHeader() {
 
         <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
           <div className="hidden sm:block"><ArabicClock /></div>
+          
+          <Link
+            to="/plans"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-gold/50 bg-gold/15 px-2.5 py-2 text-xs font-bold text-gold transition-smooth hover:bg-gold/30 md:px-3 md:text-sm shadow-luxury"
+          >
+            <Crown className="h-4 w-4 text-gold animate-pulse" />
+            <span className="hidden sm:inline">الخطط والاشتراكات</span>
+          </Link>
+
           <button
             onClick={toggle}
             aria-label={t("lang.aria")}
@@ -145,7 +159,7 @@ export function SiteHeader() {
                   }`}
                   style={active ? { color: "var(--royal-deep)", backgroundColor: "var(--gold)" } : undefined}
                 >
-                  {t(n.key)}
+                  {getNavLabel(n)}
                 </Link>
               );
             })}
