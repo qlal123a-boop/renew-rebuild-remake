@@ -206,6 +206,30 @@ async function callGeminiModel(
   }
 }
 
+/**
+ * Direct Gemini engine: walks the free-tier model chain, retrying transient
+ * failures (429 / 5xx) with backoff so quota hiccups never stop an operation.
+ */
+async function callGeminiDirect(
+  apiKey: string,
+  opts: { messages: GatewayMessage[]; json?: boolean; timeoutMs?: number; label?: string },
+): Promise<AiResult> {
+  let last: AiResult = { ok: false, code: "unavailable", detail: "gemini direct not attempted" };
+  for (const model of GEMINI_DIRECT_MODELS) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const r = await callGeminiModel(apiKey, model, opts);
+      if (r.ok) return r;
+      last = r;
+      if ((r.code === "rate_limit" || r.code === "unavailable") && attempt < 2) {
+        await sleep(800 * attempt);
+        continue;
+      }
+      break;
+    }
+  }
+  return last;
+}
+
 /** OpenAI direct call with the project's own key. */
 async function callOpenAiDirect(
   apiKey: string,
