@@ -268,8 +268,13 @@ async function callOpenAiDirect(
 }
 
 /**
- * Lovable gateway first, then the project's own Gemini/OpenAI keys.
- * Keeps AI features alive when the workspace allowance is exhausted.
+ * Provider chain with a silent quota bypass.
+ *
+ * `preferDirect` (used by المبرمج الذكي) sends text requests straight to the
+ * project's own Gemini key first, so the workspace allowance is never touched;
+ * the Lovable gateway is only a last resort. Without `preferDirect` the gateway
+ * runs first and any quota / rate-limit failure falls through to the direct
+ * engine silently.
  */
 export async function callAiWithFallback(
   lovableKey: string | undefined,
@@ -280,24 +285,38 @@ export async function callAiWithFallback(
     timeoutMs?: number;
     attempts?: number;
     label?: string;
+    /** Try the independent Gemini engine before the Lovable gateway. */
+    preferDirect?: boolean;
   },
 ): Promise<AiResult> {
   let last: AiResult = { ok: false, code: "no_key", detail: "no provider configured" };
-  if (lovableKey) {
-    last = await callAiGateway(lovableKey, opts);
-    if (last.ok) return last;
-  }
-  if (keys.geminiKey) {
-    const r = await callGeminiDirect(keys.geminiKey, opts);
+
+  const direct = async (): Promise<AiResult | null> => {
+    if (keys.geminiKey) {
+      const r = await callGeminiDirect(keys.geminiKey, opts);
+      if (r.ok) return r;
+      last = r;
+    }
+    if (keys.openaiKey) {
+      const r = await callOpenAiDirect(keys.openaiKey, opts);
+      if (r.ok) return r;
+      last = r;
+    }
+    return null;
+  };
+
+  const gateway = async (): Promise<AiResult | null> => {
+    if (!lovableKey) return null;
+    const r = await callAiGateway(lovableKey, opts);
     if (r.ok) return r;
     last = r;
+    return null;
+  };
+
+  if (opts.preferDirect && keys.geminiKey) {
+    return (await direct()) ?? (await gateway()) ?? last;
   }
-  if (keys.openaiKey) {
-    const r = await callOpenAiDirect(keys.openaiKey, opts);
-    if (r.ok) return r;
-    last = r;
-  }
-  return last;
+  return (await gateway()) ?? (await direct()) ?? last;
 }
 
 /** Tolerant JSON extraction for models that wrap JSON in prose/fences. */
