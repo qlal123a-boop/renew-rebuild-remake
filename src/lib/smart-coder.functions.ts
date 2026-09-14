@@ -45,9 +45,14 @@ async function assertSuperAdmin(ctx: { supabase: { rpc: (n: "is_super_admin") =>
 /** Own provider keys (اختيارية) — تُستخدم تلقائيًا عند نفاد رصيد Lovable. */
 function customKeys() {
   return {
-    geminiKey: process.env["GEMINI_API_KEY"],
+    geminiKey: process.env["GEMINI_API_KEY"] ?? process.env["VITE_GEMINI_API_KEY"],
     openaiKey: process.env["OPENAI_API_KEY"],
   };
+}
+
+/** true when the independent engine (own Gemini key) is available. */
+function directMode() {
+  return Boolean(process.env["GEMINI_API_KEY"] ?? process.env["VITE_GEMINI_API_KEY"]);
 }
 
 function fail(code: keyof typeof AI_ERROR_AR): never {
@@ -102,6 +107,7 @@ export const agentPlan = createServerFn({ method: "POST" })
 
     const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
       label: "smart-coder-plan",
+      preferDirect: directMode(),
       json: true,
       timeoutMs: 90_000,
       messages: [
@@ -205,6 +211,7 @@ export const agentExecute = createServerFn({ method: "POST" })
         for (let attempt = 1; attempt <= 2 && !written; attempt++) {
           const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
             label: `smart-coder-code:${target.path}`,
+            preferDirect: directMode(),
             json: true,
             timeoutMs: 180_000,
             messages: [
@@ -368,7 +375,8 @@ export const agentStatus = createServerFn({ method: "POST" })
       base: repo.base,
       githubReady,
       aiReady,
-      geminiReady: Boolean(process.env["GEMINI_API_KEY"]),
+      directMode: directMode(),
+      geminiReady: directMode(),
       openaiReady: Boolean(process.env["OPENAI_API_KEY"]),
       fileCount,
       repoError,

@@ -227,9 +227,12 @@ function SmartCoder() {
             <KeyRound className="h-4 w-4 text-gold" /> محرّكات الذكاء الاصطناعي
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            يجرّب المبرمج الذكي محرّك Lovable أولًا، ثم مفاتيحك الخاصة تلقائيًا حتى يستمر العمل دون انقطاع.
+            {info.directMode
+              ? "الوضع المستقل مفعّل: تُرسل الأوامر إلى مفتاح Gemini الخاص بك مباشرة، بلا حدود رصيد، ومحرّك Lovable احتياطي فقط."
+              : "يجرّب المبرمج الذكي محرّك Lovable أولًا، وعند نفاد الرصيد ينتقل تلقائيًا إلى مفتاحك الخاص ليستمر العمل."}
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+            <Badge on={info.directMode} label="الوضع المستقل" />
             <Badge on={info.aiReady} label="محرّك Lovable" />
             <Badge on={info.geminiReady} label="مفتاح Gemini الخاص" />
             <Badge on={info.openaiReady} label="مفتاح OpenAI الخاص" />

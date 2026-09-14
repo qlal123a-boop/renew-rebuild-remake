@@ -146,12 +146,19 @@ export async function callAiGateway(
 
 export type CustomKeys = { geminiKey?: string | undefined; openaiKey?: string | undefined };
 
-/** Google AI Studio (Gemini) direct call with the project's own key. */
-async function callGeminiDirect(
+/** Free-tier Gemini chain used by the independent (direct) engine. */
+export const GEMINI_DIRECT_MODELS = [
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash",
+] as const;
+
+/** Google AI Studio (Gemini) direct call with the project's own key, one model. */
+async function callGeminiModel(
   apiKey: string,
+  model: string,
   opts: { messages: GatewayMessage[]; json?: boolean; timeoutMs?: number; label?: string },
 ): Promise<AiResult> {
-  const model = "gemini-2.5-flash";
   const label = opts.label ?? "gemini-direct";
   const system = opts.messages
     .filter((m) => m.role === "system")
@@ -199,6 +206,30 @@ async function callGeminiDirect(
   }
 }
 
+/**
+ * Direct Gemini engine: walks the free-tier model chain, retrying transient
+ * failures (429 / 5xx) with backoff so quota hiccups never stop an operation.
+ */
+async function callGeminiDirect(
+  apiKey: string,
+  opts: { messages: GatewayMessage[]; json?: boolean; timeoutMs?: number; label?: string },
+): Promise<AiResult> {
+  let last: AiResult = { ok: false, code: "unavailable", detail: "gemini direct not attempted" };
+  for (const model of GEMINI_DIRECT_MODELS) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const r = await callGeminiModel(apiKey, model, opts);
+      if (r.ok) return r;
+      last = r;
+      if ((r.code === "rate_limit" || r.code === "unavailable") && attempt < 2) {
+        await sleep(800 * attempt);
+        continue;
+      }
+      break;
+    }
+  }
+  return last;
+}
+
 /** OpenAI direct call with the project's own key. */
 async function callOpenAiDirect(
   apiKey: string,
@@ -237,8 +268,13 @@ async function callOpenAiDirect(
 }
 
 /**
- * Lovable gateway first, then the project's own Gemini/OpenAI keys.
- * Keeps AI features alive when the workspace allowance is exhausted.
+ * Provider chain with a silent quota bypass.
+ *
+ * `preferDirect` (used by المبرمج الذكي) sends text requests straight to the
+ * project's own Gemini key first, so the workspace allowance is never touched;
+ * the Lovable gateway is only a last resort. Without `preferDirect` the gateway
+ * runs first and any quota / rate-limit failure falls through to the direct
+ * engine silently.
  */
 export async function callAiWithFallback(
   lovableKey: string | undefined,
@@ -249,24 +285,38 @@ export async function callAiWithFallback(
     timeoutMs?: number;
     attempts?: number;
     label?: string;
+    /** Try the independent Gemini engine before the Lovable gateway. */
+    preferDirect?: boolean;
   },
 ): Promise<AiResult> {
   let last: AiResult = { ok: false, code: "no_key", detail: "no provider configured" };
-  if (lovableKey) {
-    last = await callAiGateway(lovableKey, opts);
-    if (last.ok) return last;
-  }
-  if (keys.geminiKey) {
-    const r = await callGeminiDirect(keys.geminiKey, opts);
+
+  const direct = async (): Promise<AiResult | null> => {
+    if (keys.geminiKey) {
+      const r = await callGeminiDirect(keys.geminiKey, opts);
+      if (r.ok) return r;
+      last = r;
+    }
+    if (keys.openaiKey) {
+      const r = await callOpenAiDirect(keys.openaiKey, opts);
+      if (r.ok) return r;
+      last = r;
+    }
+    return null;
+  };
+
+  const gateway = async (): Promise<AiResult | null> => {
+    if (!lovableKey) return null;
+    const r = await callAiGateway(lovableKey, opts);
     if (r.ok) return r;
     last = r;
+    return null;
+  };
+
+  if (opts.preferDirect && keys.geminiKey) {
+    return (await direct()) ?? (await gateway()) ?? last;
   }
-  if (keys.openaiKey) {
-    const r = await callOpenAiDirect(keys.openaiKey, opts);
-    if (r.ok) return r;
-    last = r;
-  }
-  return last;
+  return (await gateway()) ?? (await direct()) ?? last;
 }
 
 /** Tolerant JSON extraction for models that wrap JSON in prose/fences. */
