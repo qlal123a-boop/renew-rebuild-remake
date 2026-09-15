@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { GraduationCap, LogIn, ShieldCheck, Menu, X, LogOut, Languages, RefreshCw } from "lucide-react";
+import { GraduationCap, LogIn, ShieldCheck, Menu, X, LogOut, Languages, RefreshCw, Crown } from "lucide-react";
 import { useState } from "react";
 import { useAuthUser, signOut } from "@/lib/use-auth";
 import { useI18n } from "@/lib/i18n";
@@ -77,6 +77,17 @@ export function SiteHeader() {
 
         <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
           <div className="hidden sm:block"><ArabicClock /></div>
+          
+          {/* زر الخطط والاشتراكات */}
+          <Link
+            to="/plans"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-gold/60 bg-gold/10 px-2.5 py-2 text-xs font-bold text-gold transition-smooth hover:bg-gold hover:text-royal-deep md:px-3 md:text-sm shadow-gold"
+          >
+            <Crown className="h-4 w-4 text-gold" />
+            <span className="hidden sm:inline">الخطط والاشتراكات</span>
+            <span className="sm:hidden">الاشتراكات</span>
+          </Link>
+
           <button
             onClick={toggle}
             aria-label={t("lang.aria")}
@@ -133,6 +144,13 @@ export function SiteHeader() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            <Link
+              to="/plans"
+              onClick={() => setOpen(false)}
+              className="col-span-2 rounded-lg border border-gold bg-gold/20 px-3 py-2 text-center text-sm font-extrabold text-gold flex items-center justify-center gap-2 shadow-gold"
+            >
+              <Crown className="h-4 w-4 text-gold" /> الخطط والاشتراكات (Free / Pro)
+            </Link>
             {NAV.map((n) => {
               const active = path === n.to;
               return (
