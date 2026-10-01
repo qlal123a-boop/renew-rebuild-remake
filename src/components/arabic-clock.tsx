@@ -16,7 +16,7 @@ export function ArabicClock() {
   const greg = new Intl.DateTimeFormat("ar", { day: "numeric", month: "long", year: "numeric" }).format(now);
   let hijri = "";
   try {
-    hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic", { day: "numeric", month: "long", year: "numeric" }).format(now);
+    hijri = new Intl.DateTimeFormat("ar-SA-u-ca-islamic" as any, { day: "numeric", month: "long", year: "numeric" }).format(now);
   } catch { /* ignore */ }
   const time = new Intl.DateTimeFormat("ar", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(now);
 
