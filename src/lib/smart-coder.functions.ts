@@ -174,6 +174,7 @@ export const agentExecute = createServerFn({ method: "POST" })
 
     try {
       const planned = plan.files.slice(0, MAX_FILES);
+      const { validateFile } = await import("./smart-coder-validate");
 
       // read current contents of the planned files (shared context, trimmed)
       const current: Record<string, string> = {};
@@ -181,6 +182,19 @@ export const agentExecute = createServerFn({ method: "POST" })
         const file = await gh.readFile(repo, f.path);
         if (file) current[f.path] = file.content;
       }
+
+      // all repo paths + planned new files (so validation knows what will exist)
+      const allPaths = new Set(await gh.listFiles(repo));
+      for (const f of planned) {
+        if (f.action === "delete") allPaths.delete(f.path);
+        else allPaths.add(f.path);
+      }
+      const knownContents = new Map(Object.entries(current));
+      const readKnown = async (spec: string) => {
+        if (knownContents.has(spec)) return;
+        const f = await gh.readFile(repo, spec).catch(() => null);
+        if (f) knownContents.set(spec, f.content);
+      };
 
       const changes: AgentChange[] = [];
       const skipped: string[] = [];
@@ -211,7 +225,13 @@ export const agentExecute = createServerFn({ method: "POST" })
           .join("\n\n");
 
         let written = false;
-        for (let attempt = 1; attempt <= 2 && !written; attempt++) {
+        let lastErrors: string[] = [];
+        let lastDraft = "";
+        // self-healing loop: generate → validate → feed errors back → repair
+        for (let attempt = 1; attempt <= 4 && !written; attempt++) {
+          const repair = lastErrors.length
+            ? `محاولتك السابقة فشلت في الفحص المسبق بالأخطاء التالية، أصلحها كلها وأعد الملف كاملًا:\n${lastErrors.map((e) => `- ${e}`).join("\n")}\n\nالمسودة السابقة:\n${lastDraft.slice(0, 30_000)}`
+            : "";
           const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
             label: `smart-coder-code:${target.path}`,
             preferDirect: directMode(),
@@ -229,6 +249,7 @@ export const agentExecute = createServerFn({ method: "POST" })
                     ? `المحتوى الحالي لهذا الملف:\n${before.slice(0, 40_000)}`
                     : "هذا ملف جديد لا يوجد له محتوى حالي.",
                   related ? `ملفات مرجعية للسياق:\n${related}` : "",
+                  repair,
                   `أرجع JSON لهذا الملف وحده فقط.`,
                 ]
                   .filter(Boolean)
@@ -242,6 +263,21 @@ export const agentExecute = createServerFn({ method: "POST" })
           const content = (out?.content ?? "").trim();
           if (!content || content === before.trim()) continue;
 
+          // pre-flight: load imported local modules so named imports can be verified
+          for (const m of content.matchAll(/from\s+["']@\/([^"']+)["']/g)) {
+            for (const ext of [".ts", ".tsx"]) {
+              const p = `src/${m[1]}${ext}`;
+              if (allPaths.has(p)) await readKnown(p);
+            }
+          }
+          const errors = validateFile(target.path, content, knownContents, allPaths);
+          if (errors.length) {
+            console.error(`[smart-coder] preflight failed ${target.path} (attempt ${attempt})`, errors);
+            lastErrors = errors;
+            lastDraft = content;
+            continue;
+          }
+
           try {
             await gh.writeFile(repo, branch, target.path, content, `feat(المبرمج الذكي): تحديث ${target.path}`);
           } catch (e) {
@@ -251,9 +287,13 @@ export const agentExecute = createServerFn({ method: "POST" })
           changes.push({ path: target.path, action: before ? "update" : "create", before, after: content });
           // later files must see the real generated exports, not guesses
           current[target.path] = content;
+          knownContents.set(target.path, content);
           written = true;
         }
-        if (!written) skipped.push(`${target.path} (تعذّر توليد محتوى صالح)`);
+        if (!written)
+          skipped.push(
+            `${target.path} (لم يجتز الفحص المسبق${lastErrors.length ? ": " + lastErrors.slice(0, 3).join("؛ ") : ""})`,
+          );
       }
 
       if (changes.length === 0) {
