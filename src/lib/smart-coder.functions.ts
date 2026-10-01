@@ -80,6 +80,9 @@ const CODE_SYSTEM = `أنت "المبرمج الذكي": مبرمج خبير ي�
 - استوردات @tanstack/react-router للتوجيه، و@tanstack/react-start لدوال السيرفر.
 - النصوص الظاهرة للمستخدم بالعربية الفصحى.
 - تعمل على ملف واحد في كل مرة: أرجع محتوى ذلك الملف فقط كاملًا.
+- TypeScript صارم: لا تستورد دالة أو نوعًا أو خاصية إلا إذا كانت موجودة حرفيًا في الملفات المرجعية المرفقة أو في مكتبة معروفة. لا تخمّن أسماء الحقول؛ استخدم الأسماء الموجودة فعلًا.
+- إذا احتجت دالة أو حقلًا غير موجود فعرّفه داخل الملف الحالي نفسه.
+- لا تعدّل src/routeTree.gen.ts؛ يُولَّد تلقائيًا عند البناء.
 أرجع JSON فقط: {"path":"المسار","content":"المحتوى الكامل للملف","summary":"ملخص عربي مختصر"}`;
 
 /** ---------- 1) plan ---------- */
@@ -239,8 +242,15 @@ export const agentExecute = createServerFn({ method: "POST" })
           const content = (out?.content ?? "").trim();
           if (!content || content === before.trim()) continue;
 
-          await gh.writeFile(repo, branch, target.path, content, `feat(المبرمج الذكي): تحديث ${target.path}`);
+          try {
+            await gh.writeFile(repo, branch, target.path, content, `feat(المبرمج الذكي): تحديث ${target.path}`);
+          } catch (e) {
+            console.error("[smart-coder] write failed", target.path, (e as Error).message);
+            continue;
+          }
           changes.push({ path: target.path, action: before ? "update" : "create", before, after: content });
+          // later files must see the real generated exports, not guesses
+          current[target.path] = content;
           written = true;
         }
         if (!written) skipped.push(`${target.path} (تعذّر توليد محتوى صالح)`);
