@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   GraduationCap, FileText, Bot, ArrowLeft, Sparkles, CheckSquare, CalendarDays, Calculator,
   BookOpen, Library, PenSquare, Timer, Wand2, ShoppingBag, Gamepad2, ChevronDown, MessagesSquare,
+  AlertCircle,
 } from "lucide-react";
 import { PremiumVersesBar } from "@/components/premium-verses-bar";
 import { DailyDateBar } from "@/components/daily-date-bar";
@@ -11,16 +12,18 @@ import { useI18n } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
-  head: () => ({
-    meta: [
-      { title: "المنارة التعليمية — بوابتك الذهبية إلى المنهاج الفلسطيني" },
-      { name: "description", content: "منصة فلسطينية مجانية: مساعد ذكي، ملخصات، أوراق عمل، دروس مرئية، ألعاب ذهنية ومكتبة إلكترونية للمنهاج الفلسطيني." },
-      { property: "og:title", content: "المنارة التعليمية — بوابتك الذهبية إلى المنهاج الفلسطيني" },
-      { property: "og:description", content: "منصة فلسطينية مجانية: مساعد ذكي، ملخصات، أوراق عمل، دروس مرئية، ألعاب ذهنية ومكتبة إلكترونية." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => (
+    {
+      meta: [
+        { title: "المنارة التعليمية — بوابتك الذهبية إلى المنهاج الفلسطيني" },
+        { name: "description", content: "منصة فلسطينية مجانية: مساعد ذكي، ملخصات، أوراق عمل، دروس مرئية، ألعاب ذهنية ومكتبة إلكترونية للمنهاج الفلسطيني." },
+        { property: "og:title", content: "المنارة التعليمية — بوابتك الذهبية إلى المنهاج الفلسطيني" },
+        { property: "og:description", content: "منصة فلسطينية مجانية: مساعد ذكي، ملخصات، أوراق عمل، دروس مرئية، ألعاب ذهنية ومكتبة إلكترونية." },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+    }
+  ),
 });
 
 /** Smart AI tools — first-class section. */
@@ -51,6 +54,19 @@ function HomePage() {
 
   return (
     <div>
+      {/* ============ URGENT ANNOUNCEMENT BAR ============ */}
+      <div className="bg-card border-b border-gold/30 py-3 px-4 text-foreground shadow-sm">
+        <div className="page-shell flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex items-center gap-2 text-gold">
+            <AlertCircle className="h-5 w-5 shrink-0 animate-pulse" />
+            <span className="font-extrabold text-sm">إشعار هام: امتحانات يوم الأحد</span>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-start flex-1">
+            "طلابنا الأعزاء، نود تذكيركم بأن لديكم يوم الأحد امتحان دراسات وامتحان فيزياء. يرجى الدراسة جيدًا، مع تمنياتنا لكم بالتاوفيق والنجاح!"
+          </p>
+        </div>
+      </div>
+
       {/* ============ HERO ============ */}
       <section className="relative flex items-center overflow-hidden">
         <div className="ghibli-sky absolute inset-0" />
