@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   GraduationCap, FileText, Bot, ArrowLeft, Sparkles, CheckSquare, CalendarDays, Calculator,
-  BookOpen, Library, PenSquare, Timer, Wand2, ShoppingBag, Gamepad2, ChevronDown, MessagesSquare,
+  BookOpen, Library, PenSquare, Timer, Wand2, ShoppingBag, Gamepad2, ChevronDown, MessagesSquare, AlertCircle,
 } from "lucide-react";
 import { PremiumVersesBar } from "@/components/premium-verses-bar";
 import { DailyDateBar } from "@/components/daily-date-bar";
@@ -51,6 +51,31 @@ function HomePage() {
 
   return (
     <div>
+      {/* ============ URGENT ANNOUNCEMENT BANNER ============ */}
+      <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-3 text-foreground">
+        <div className="page-shell flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400">
+              <AlertCircle className="h-4 w-4 animate-pulse" />
+            </span>
+            <div>
+              <p className="text-xs sm:text-sm font-extrabold text-amber-700 dark:text-amber-300">
+                إشعار هام: امتحانات يوم الأحد
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                طلابنا الأعزاء، نود تذكيركم بأن لديكم يوم الأحد امتحان دراسات وامتحان فيزياء. يرجى الدراسة جيدًا، مع تمنياتنا لكم بالتوفيق والنجاح!
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/schedule"
+            className="shrink-0 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-bold text-white shadow-sm transition-smooth hover:bg-amber-600"
+          >
+            الجدول المدرسي
+          </Link>
+        </div>
+      </div>
+
       {/* ============ HERO ============ */}
       <section className="relative flex items-center overflow-hidden">
         <div className="ghibli-sky absolute inset-0" />

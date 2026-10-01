@@ -1,9 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell, X, AlertCircle } from "lucide-react";
 
-export type AppNotification = { id: string; text: string; time: string };
+export type AppNotification = { id: string; text: string; time: string; urgent?: boolean };
 
 const SEED: AppNotification[] = [
+  { 
+    id: "n-urgent-sunday", 
+    text: "📢 إشعار هام: امتحانات يوم الأحد — طلابنا الأعزاء، نود تذكيركم بأن لديكم يوم الأحد امتحان دراسات وامتحان فيزياء. يرجى الدراسة جيدًا، مع تمنياتنا لكم بالتوفيق والنجاح!", 
+    time: "عاجل", 
+    urgent: true 
+  },
   { id: "n1", text: "📢 اختبار قادم غدًا — راجع ملخّصات المادة", time: "الآن" },
   { id: "n2", text: "📚 درس جديد متاح في قسم الصفوف المدرسية", time: "قبل ساعة" },
   { id: "n3", text: "🏆 تم إضافة لعبة جديدة إلى الألعاب الذهنية", time: "اليوم" },
@@ -63,21 +69,33 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute end-0 z-50 mt-2 w-72 animate-fade-in rounded-2xl border border-gold/30 bg-card p-2 text-foreground shadow-luxury">
+        <div className="absolute end-0 z-50 mt-2 w-80 sm:w-96 animate-fade-in rounded-2xl border border-gold/30 bg-card p-2 text-foreground shadow-luxury">
           <div className="flex items-center justify-between px-2 py-1">
-            <span className="text-xs font-extrabold">الإشعارات</span>
+            <span className="text-xs font-extrabold flex items-center gap-1.5">
+              <AlertCircle className="h-3.5 w-3.5 text-gold" /> الإشعارات والتنبيهات
+            </span>
             <button onClick={() => setOpen(false)} aria-label="إغلاق" className="rounded p-1 hover:bg-muted">
               <X className="h-3.5 w-3.5" />
             </button>
           </div>
-          <div className="space-y-1.5">
+          <div className="mt-2 space-y-2 max-h-[360px] overflow-y-auto">
             {items.length === 0 ? (
               <p className="px-2 py-3 text-center text-xs text-muted-foreground">لا توجد إشعارات</p>
             ) : items.map((n) => (
-              <div key={n.id} className="group flex items-start gap-2 rounded-xl border border-border bg-background px-3 py-2">
+              <div 
+                key={n.id} 
+                className={`group flex items-start gap-2.5 rounded-xl border px-3 py-2.5 transition-all ${
+                  n.urgent 
+                    ? "border-amber-500/50 bg-amber-500/10 text-foreground shadow-sm" 
+                    : "border-border bg-background"
+                }`}
+              >
+                {n.urgent && <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />}
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold leading-relaxed">{n.text}</p>
-                  <p className="mt-0.5 text-[10px] text-muted-foreground">{n.time}</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground flex items-center gap-1">
+                    <span>{n.time}</span>
+                  </p>
                 </div>
                 <button
                   onClick={() => setItems((x) => x.filter((i) => i.id !== n.id))}
