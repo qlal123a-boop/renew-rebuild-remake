@@ -169,25 +169,48 @@ export async function deleteBranch(r: Repo, branch: string): Promise<void> {
   });
 }
 
+export type CheckRun = { id: number; name: string; conclusion: string | null; status: string };
+
 /** Latest CI check conclusions for a branch head. */
-export async function branchChecks(r: Repo, branch: string): Promise<{ state: string; runs: Array<{ name: string; conclusion: string | null; status: string }> }> {
+export async function branchChecks(
+  r: Repo,
+  branch: string,
+): Promise<{ state: string; sha?: string; runs: CheckRun[] }> {
   try {
     const ref = await gh<{ object: { sha: string } }>(
       `repos/${r.owner}/${r.repo}/git/ref/heads/${encodeURIComponent(branch)}`,
     );
-    const data = await gh<{ check_runs: Array<{ name: string; conclusion: string | null; status: string }> }>(
+    const data = await gh<{ check_runs: CheckRun[] }>(
       `repos/${r.owner}/${r.repo}/commits/${ref.object.sha}/check-runs`,
     );
-    const runs = data.check_runs ?? [];
+    const runs = (data.check_runs ?? []).map((x) => ({ id: x.id, name: x.name, conclusion: x.conclusion, status: x.status }));
     const state = runs.length === 0
       ? "none"
-      : runs.some((x) => x.conclusion === "failure")
+      : runs.some((x) => x.conclusion === "failure" || x.conclusion === "cancelled" || x.conclusion === "timed_out")
         ? "failure"
         : runs.every((x) => x.status === "completed")
           ? "success"
           : "pending";
-    return { state, runs };
+    return { state, sha: ref.object.sha, runs };
   } catch {
     return { state: "unknown", runs: [] };
   }
+}
+
+export type Annotation = { path: string; start_line: number; message: string; annotation_level: string };
+
+/** Error annotations (file + line + message) emitted by a failed check run. */
+export async function checkAnnotations(r: Repo, runId: number): Promise<Annotation[]> {
+  try {
+    return await gh<Annotation[]>(`repos/${r.owner}/${r.repo}/check-runs/${runId}/annotations?per_page=100`);
+  } catch {
+    return [];
+  }
+}
+
+export async function findOpenPr(r: Repo, branch: string): Promise<{ number: number; html_url: string } | null> {
+  const list = await gh<Array<{ number: number; html_url: string }>>(
+    `repos/${r.owner}/${r.repo}/pulls?state=open&head=${encodeURIComponent(`${r.owner}:${branch}`)}`,
+  );
+  return list[0] ?? null;
 }

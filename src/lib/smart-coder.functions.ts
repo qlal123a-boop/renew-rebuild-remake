@@ -315,22 +315,15 @@ export const agentExecute = createServerFn({ method: "POST" })
         `_تم إنشاء هذا الطلب بواسطة المبرمج الذكي — عملية ${op.id}_`,
       ].join("\n");
 
-      const pr = await gh.openPullRequest(
-        repo,
-        branch,
-        `المبرمج الذكي: ${(plan.summary || op.prompt).slice(0, 70)}`,
-        body,
-      );
-      const checks = await gh.branchChecks(repo, branch);
+      // No PR yet: the branch must pass the real TypeScript + Build CI first (see agentAdvance).
+      const checks = { state: "pending", repairAttempts: 0, prBody: body, log: ["تم رفع التعديلات إلى فرع معزول، بانتظار فحص TypeScript والبناء."] };
 
       const { data: updated, error: upErr } = await context.supabase
         .from("agent_operations")
         .update({
-          status: "pr_open",
+          status: "validating",
           changes: changes as never,
           branch,
-          pr_number: pr.number,
-          pr_url: pr.html_url,
           checks: checks as never,
           error: null,
         })
@@ -344,6 +337,157 @@ export const agentExecute = createServerFn({ method: "POST" })
       await context.supabase.from("agent_operations").update({ status: "failed", error: message }).eq("id", op.id);
       throw new Error(message);
     }
+  });
+
+/** ---------- 2b) CI gate + self-repair loop ---------- */
+
+const MAX_REPAIRS = 5;
+
+type GateChecks = {
+  state?: string;
+  sha?: string;
+  repairAttempts?: number;
+  prBody?: string;
+  log?: string[];
+  errors?: string[];
+  runs?: Array<{ id?: number; name: string; status: string; conclusion: string | null }>;
+};
+
+/**
+ * Advances a "validating" operation one step:
+ * CI pending → wait; CI green → open the PR; CI red → read the exact
+ * file/line errors, have the AI repair those files, commit, and wait again.
+ * Gives up (status=failed, all errors shown) after MAX_REPAIRS attempts.
+ */
+export const agentAdvance = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => z.object({ operationId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertSuperAdmin(context as never);
+    const { data: op } = await context.supabase.from("agent_operations").select("*").eq("id", data.operationId).single();
+    if (!op) throw new Error("العملية غير موجودة.");
+    if (op.status !== "validating" || !op.branch) return op as unknown as AgentOperation;
+
+    const gh = await import("./github.server");
+    const repo = gh.repoConfig();
+    const prev = (op.checks ?? {}) as GateChecks;
+    const ci = await gh.branchChecks(repo, op.branch);
+    const log = [...(prev.log ?? [])];
+
+    const save = async (patch: Record<string, unknown>, checks: GateChecks) => {
+      const { data: row, error } = await context.supabase
+        .from("agent_operations")
+        .update({ ...patch, checks: checks as never })
+        .eq("id", op.id)
+        .select("*")
+        .single();
+      if (error) throw new Error(error.message);
+      return row as unknown as AgentOperation;
+    };
+
+    if (ci.state === "pending" || ci.state === "none" || ci.state === "unknown") {
+      return save({}, { ...prev, state: "pending", runs: ci.runs });
+    }
+
+    if (ci.state === "success") {
+      const plan = op.plan as unknown as AgentPlan;
+      const existing = await gh.findOpenPr(repo, op.branch);
+      const pr =
+        existing ??
+        (await gh.openPullRequest(
+          repo,
+          op.branch,
+          `المبرمج الذكي: ${(plan.summary || op.prompt).slice(0, 70)}`,
+          `${prev.prBody ?? ""}\n\n✅ اجتاز فحص TypeScript والبناء قبل فتح الطلب (محاولات الإصلاح: ${prev.repairAttempts ?? 0}).`,
+        ));
+      log.push("نجح فحص TypeScript والبناء — تم فتح طلب الدمج.");
+      return save(
+        { status: "pr_open", pr_number: pr.number, pr_url: pr.html_url, error: null },
+        { ...prev, state: "success", runs: ci.runs, log, errors: [] },
+      );
+    }
+
+    // ---- failure: collect exact errors ----
+    const failed = ci.runs.filter((r) => r.conclusion && r.conclusion !== "success" && r.conclusion !== "skipped");
+    const annotations = (await Promise.all(failed.map((r) => gh.checkAnnotations(repo, r.id)))).flat()
+      .filter((a) => a.annotation_level === "failure" && a.path && !a.path.startsWith(".github"));
+    const errors = annotations.map((a) => `${a.path}:${a.start_line} — ${a.message}`).slice(0, 60);
+    const attempts = (prev.repairAttempts ?? 0) + 1;
+
+    if (annotations.length === 0 || attempts > MAX_REPAIRS) {
+      const reason = annotations.length === 0
+        ? "فشل الفحص دون أخطاء محددة بملف وسطر؛ راجع سجل GitHub Actions."
+        : `تعذّر الإصلاح التلقائي بعد ${MAX_REPAIRS} محاولات.`;
+      log.push(reason);
+      return save(
+        { status: "failed", error: [reason, ...errors].join("\n").slice(0, 3000) },
+        { ...prev, state: "failure", runs: ci.runs, log, errors },
+      );
+    }
+
+    // group errors per file, repair each file with the AI
+    const byFile = new Map<string, string[]>();
+    for (const a of annotations) {
+      const list = byFile.get(a.path) ?? [];
+      list.push(`سطر ${a.start_line}: ${a.message}`);
+      byFile.set(a.path, list);
+    }
+    const changes = (op.changes as unknown as AgentChange[]) ?? [];
+    const changedContext = changes
+      .filter((c) => c.after)
+      .map((c) => `--- ${c.path} ---\n${c.after.slice(0, 6_000)}`)
+      .join("\n\n");
+    const repaired: string[] = [];
+    const notRepaired: string[] = [];
+
+    for (const [path, errs] of byFile) {
+      if (!gh.isAllowedPath(path)) { notRepaired.push(`${path} (محمي)`); continue; }
+      const file = await gh.readFile(repo, path, op.branch);
+      if (!file) { notRepaired.push(`${path} (غير موجود)`); continue; }
+      const res = await callAiWithFallback(process.env["LOVABLE_API_KEY"], customKeys(), {
+        label: `smart-coder-repair:${path}`,
+        preferDirect: directMode(),
+        json: true,
+        timeoutMs: 180_000,
+        messages: [
+          { role: "system", content: CODE_SYSTEM + "\nأنت الآن في وضع الإصلاح: أصلح أخطاء TypeScript/البناء المذكورة إصلاحًا حقيقيًا. ممنوع استخدام @ts-ignore أو @ts-expect-error أو any لإخفاء الخطأ أو تعطيل الفحص." },
+          {
+            role: "user",
+            content: [
+              `طلب المدير الأصلي:\n${op.prompt}`,
+              `الملف: ${path}`,
+              `أخطاء الفحص الحقيقية في هذا الملف:\n${errs.join("\n")}`,
+              `المحتوى الحالي:\n${file.content.slice(0, 40_000)}`,
+              changedContext ? `ملفات أخرى عُدّلت في نفس العملية:\n${changedContext}` : "",
+              "أرجع JSON للملف كاملًا بعد الإصلاح.",
+            ].filter(Boolean).join("\n\n"),
+          },
+        ],
+      });
+      if (!res.ok) { notRepaired.push(`${path} (تعذّر الاتصال بالمحرّك)`); continue; }
+      const out = parseJsonLoose<{ content?: string }>(res.content);
+      const content = (out?.content ?? "").trim();
+      if (!content || content === file.content.trim() || /@ts-(ignore|nocheck|expect-error)/.test(content)) {
+        notRepaired.push(`${path} (إصلاح غير صالح)`);
+        continue;
+      }
+      await gh.writeFile(repo, op.branch, path, content, `fix(المبرمج الذكي): إصلاح تلقائي ${attempts} لـ ${path}`);
+      const idx = changes.findIndex((c) => c.path === path);
+      if (idx >= 0) changes[idx] = { ...changes[idx]!, after: content };
+      else changes.push({ path, action: "update", before: file.content, after: content });
+      repaired.push(path);
+    }
+
+    log.push(
+      `محاولة إصلاح ${attempts}: ${errors.length} خطأ؛ أُصلح ${repaired.length} ملف${notRepaired.length ? `، تعذّر: ${notRepaired.join("، ")}` : ""}. إعادة الفحص...`,
+    );
+    if (repaired.length === 0) {
+      return save(
+        { status: "failed", error: ["تعذّر الإصلاح التلقائي.", ...errors].join("\n").slice(0, 3000) },
+        { ...prev, state: "failure", runs: ci.runs, log, errors, repairAttempts: attempts },
+      );
+    }
+    return save({ changes: changes as never }, { ...prev, state: "pending", runs: [], log, errors, repairAttempts: attempts });
   });
 
 /** ---------- 3) refresh CI checks ---------- */

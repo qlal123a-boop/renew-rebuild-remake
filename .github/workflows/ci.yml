@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    branches: [main, "smart-coder/**"]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -24,15 +24,25 @@ jobs:
       - name: Install dependencies
         run: bun install
       - name: Build (regenerates route tree)
-        run: bun run build
+        shell: bash
+        run: |
+          set -o pipefail
+          bun run build 2>&1 | tee build.log || {
+            # surface bundler errors (file:line:col) as annotations for the Smart Coder repair loop
+            grep -oE '(src/[^ :"]+\.(ts|tsx)):([0-9]+):([0-9]+)[^\n]*' build.log | head -20 | \
+              sed -E 's/^(src\/[^:]+):([0-9]+):([0-9]+):?(.*)$/::error file=\1,line=\2,col=\3::build error\4/' || true
+            grep -E 'error|Error' build.log | grep -oE 'src/[^ :"]+\.(ts|tsx)' | sort -u | \
+              sed -E 's/^(.*)$/::error file=\1,line=1::build failed in this file — see log/' || true
+            exit 1
+          }
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
       - name: Typecheck
+        shell: bash
         run: |
           bunx tsc --noEmit --pretty false 2>&1 | tee tsc.log
           status=${PIPESTATUS[0]}
-          # expose each error as an annotation with file + line
           grep -E '^[^ ].*\([0-9]+,[0-9]+\): error' tsc.log | sed -E 's/^(.*)\(([0-9]+),([0-9]+)\): error (.*)$/::error file=\1,line=\2,col=\3::\4/' || true
           exit $status
       - name: Lint
