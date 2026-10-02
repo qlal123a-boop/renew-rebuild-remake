@@ -25,6 +25,7 @@ import {
   agentHistory,
   agentPlan,
   agentRefreshChecks,
+  agentAdvance,
   agentRollback,
   agentStatus,
   type AgentOperation,
@@ -48,6 +49,7 @@ export const Route = createFileRoute("/smart-coder")({
 const STATUS_AR: Record<string, string> = {
   planned: "خطة جاهزة",
   running: "قيد التنفيذ",
+  validating: "فحص وإصلاح تلقائي",
   pr_open: "طلب دمج مفتوح",
   failed: "فشلت",
   rolled_back: "تم التراجع",
@@ -86,6 +88,7 @@ function SmartCoder() {
   const history = useServerFn(agentHistory);
   const status = useServerFn(agentStatus);
   const refresh = useServerFn(agentRefreshChecks);
+  const advance = useServerFn(agentAdvance);
   const rollback = useServerFn(agentRollback);
   const applyFile = useServerFn(agentApplyFile);
 
@@ -134,6 +137,23 @@ function SmartCoder() {
     void loadHistory();
   }, [status, loadHistory]);
 
+  // CI gate: poll until the branch passes TypeScript + Build (auto-repairing failures), then the PR opens.
+  useEffect(() => {
+    if (!current || current.status !== "validating") return;
+    let stop = false;
+    const tick = async () => {
+      try {
+        const op = await advance({ data: { operationId: current.id } });
+        if (stop) return;
+        setCurrent(op);
+        if (op.status === "pr_open") { toast.success("نجح الفحص وفُتح طلب الدمج."); void loadHistory(); }
+        else if (op.status === "failed") { toast.error("فشل الفحص بعد محاولات الإصلاح؛ الأخطاء معروضة."); void loadHistory(); }
+      } catch (e) { console.error(e); }
+    };
+    const t = setInterval(tick, 20_000);
+    return () => { stop = true; clearInterval(t); };
+  }, [current?.id, current?.status, advance, loadHistory]);
+
   async function onPlan() {
     if (prompt.trim().length < 5) return toast.error("اكتب أمرًا واضحًا أولًا.");
     setBusy("plan");
@@ -158,7 +178,7 @@ function SmartCoder() {
     try {
       const op = await execute({ data: { operationId: current.id, confirmDangerous: confirmDanger } });
       setCurrent(op);
-      toast.success("تم تنفيذ التغييرات وفتح طلب الدمج للمراجعة.");
+      toast.success("تم رفع التعديلات؛ جارٍ فحص TypeScript والبناء وإصلاح أي خطأ قبل فتح طلب الدمج.");
       void loadHistory();
     } catch (e) {
       toast.error((e as Error).message || "فشل التنفيذ.");
