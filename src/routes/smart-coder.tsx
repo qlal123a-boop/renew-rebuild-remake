@@ -356,7 +356,15 @@ function SmartCoder() {
             </button>
           )}
 
-          {current.error && <p className="text-sm text-destructive">{current.error}</p>}
+          {current.error && <p className="whitespace-pre-wrap text-sm text-destructive">{current.error}</p>}
+          {Array.isArray((current.checks as { log?: string[] }).log) && (
+            <ul className="space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              {((current.checks as { log?: string[] }).log ?? []).map((l, i) => (
+                <li key={i}>• {l}</li>
+              ))}
+              {current.status === "validating" && <li className="font-bold text-foreground">• جارٍ الفحص على GitHub... (تحديث تلقائي كل 20 ثانية)</li>}
+            </ul>
+          )}
 
           {current.changes?.length > 0 && (
             <div className="space-y-3">
