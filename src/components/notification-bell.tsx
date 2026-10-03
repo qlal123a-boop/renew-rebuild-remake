@@ -4,6 +4,7 @@ import { Bell, X } from "lucide-react";
 export type AppNotification = { id: string; text: string; time: string };
 
 const SEED: AppNotification[] = [
+  { id: "n0", text: "⚛️ الأحد فيزياء", time: "الآن" },
   { id: "n1", text: "📢 اختبار قادم غدًا — راجع ملخّصات المادة", time: "الآن" },
   { id: "n2", text: "📚 درس جديد متاح في قسم الصفوف المدرسية", time: "قبل ساعة" },
   { id: "n3", text: "🏆 تم إضافة لعبة جديدة إلى الألعاب الذهنية", time: "اليوم" },
